@@ -52,6 +52,21 @@ const Broll: React.FC<{ arquivo: string; dur: number; desde?: number }> = ({ arq
   );
 };
 
+// Modo montagem (aftermovie): clipes em sequência, cortados na batida, com leve zoom e flash curto no corte.
+const Clipe: React.FC<{ arquivo: string; dur: number; desde?: number; k: number }> = ({ arquivo, dur, desde, k }) => {
+  const frame = useCurrentFrame();
+  const zoom = interpolate(frame, [0, dur], k % 2 === 0 ? [1.0, 1.06] : [1.06, 1.0]);
+  const flash = interpolate(frame, [0, 3], [0.35, 0], { extrapolateRight: "clamp" });
+  return (
+    <AbsoluteFill>
+      <AbsoluteFill style={{ transform: `scale(${zoom})` }}>
+        <OffthreadVideo src={staticFile(arquivo)} muted startFrom={q(desde ?? 0)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </AbsoluteFill>
+      {k > 0 ? <AbsoluteFill style={{ backgroundColor: "white", opacity: flash }} /> : null}
+    </AbsoluteFill>
+  );
+};
+
 const faixa = (): React.CSSProperties => ({
   position: "absolute",
   left: MARGEM_X,
@@ -101,6 +116,11 @@ export const Video: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       <Base />
+      {(r.clipes ?? []).map((c, k) => (
+        <Sequence key={`c${k}`} from={q(c.inicio)} durationInFrames={Math.max(1, q(c.fim - c.inicio))}>
+          <Clipe arquivo={c.arquivo} dur={q(c.fim - c.inicio)} desde={c.desde} k={k} />
+        </Sequence>
+      ))}
       {r.broll.map((b, k) => (
         <Sequence key={`b${k}`} from={q(b.inicio)} durationInFrames={Math.max(1, q(b.fim - b.inicio))}>
           <Broll arquivo={b.arquivo} dur={q(b.fim - b.inicio)} desde={b.desde} />
@@ -123,7 +143,7 @@ export const Video: React.FC = () => {
         </Sequence>
       ))}
       {r.trilha ? (
-        <Audio src={staticFile(r.trilha.arquivo)} loop
+        <Audio src={staticFile(r.trilha.arquivo)} loop startFrom={q(r.trilha.desde ?? 0)}
           volume={(f) => interpolate(f, [0, 15, total - 30, total], [0, r.trilha!.volume, r.trilha!.volume, 0],
             { extrapolateLeft: "clamp", extrapolateRight: "clamp" })} />
       ) : null}

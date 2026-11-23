@@ -45,8 +45,14 @@ def main():
     if r.returncode != 0:
         with open(log, encoding="utf-8", errors="replace") as f:
             linhas = [l.rstrip() for l in f if l.strip()]
+        texto = "\n".join(linhas)
+        if "chrome-headless-shell" in texto and "ENOENT" in texto:
+            print(f"ERRO no render: caminho longo demais para o Chrome headless ({len(os.getcwd())} caracteres na pasta). "
+                  "Use um estúdio num caminho curto (padrão ~/Videos/Edicao) ou aponte o navegador em remotion.config.ts.")
+            sys.exit(1)
+        linhas = [l for l in linhas if not l.lstrip().startswith("at ")]
         print(f"ERRO no render ({seg:.0f}s). Últimas linhas de {log}:")
-        print("\n".join(linhas[-15:]))
+        print("\n".join(linhas[-12:]))
         sys.exit(1)
     dur = ""
     if shutil.which("ffprobe"):

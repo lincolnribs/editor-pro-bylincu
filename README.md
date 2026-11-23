@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img alt="versão" src="https://img.shields.io/badge/versão-2.3-FF2E88">
+  <img alt="versão" src="https://img.shields.io/badge/versão-2.4-FF2E88">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-111">
   <img alt="Remotion" src="https://img.shields.io/badge/Remotion-padrão-0B84F3">
   <img alt="idioma" src="https://img.shields.io/badge/idioma-português-2EA043">
@@ -38,19 +38,16 @@ Depois, reinicie o Claude Code. Não precisa de conta no GitHub.
 
 ## Como funciona
 
-Um trilho de 9 etapas, cada uma com um comando que diz qual é a próxima. O Claude não planeja nem escreve código: ele só decide o que é criativo.
+O Claude analisa o material e o pedido, escolhe o **formato** e segue o caminho certo para ele. Cada etapa é um comando que já diz qual é a próxima: o Claude não planeja nem escreve código, só decide o que é criativo.
 
-| Etapa | Quem faz |
-|---|---|
-| 1. Triagem e transcrição dos brutos | automático |
-| 2. Decupagem (melhor trecho de cada fala) | Claude |
-| 3. Voz limpa, silêncios cortados, conferência de palavras | automático |
-| 4. Roteiro com legenda e mapa do rosto | automático |
-| 5. Lettering, b-roll, cores e fonte | Claude |
-| 6. Trilha sonora (se aprovada) | automático |
-| 7. SFX nos letterings e b-rolls | automático |
-| 8. Prévia e conferência | Claude olha uma folha |
-| 9. Render final, volume e histórico | automático |
+| Formato | Para quê | O caminho |
+|---|---|---|
+| 🎙️ **Talking head** | Reels premium com pessoa falando | decupagem → voz limpa → lettering, b-roll, SFX → prévia → entrega |
+| 💰 **Comercial** | Anúncio, oferta, lançamento | talking head + gancho, prova, oferta, CTA e fechamento com a marca |
+| ✂️ **Decupagem** | Só montar os takes | melhores trechos → voz e silêncios → legenda simples |
+| 💬 **Legenda** | Vídeo já editado | voz limpa sem cortar → legenda revisada |
+| 🎉 **Aftermovie** | Evento, bastidores, sem fala | música → seleção dos clipes → cortes na batida → título e fechamento |
+| ✨ **Motion** | Vinheta, logo, peça animada | o complemento certo para o pedido → entrega registrada |
 
 ## Complementos incluídos
 

@@ -6,8 +6,9 @@ export type Roteiro = {
   largura: number;
   altura: number;
   duracaoQuadros: number;
-  base: string; // vídeo em public/ (voz limpa + cortes)
+  base: string; // vídeo em public/ (voz limpa + cortes); vazio no modo montagem
   trechos: Trecho[]; // do base.cortes.json: cada trecho é um plano para o punch-in
+  clipes?: { arquivo: string; inicio: number; fim: number; desde?: number }[]; // modo montagem (aftermovie)
   tema: {
     fonte: string; // nome da família
     arquivoFonte?: string; // opcional: fonte do cliente em public/fontes/ (ttf/otf/woff2)
@@ -23,5 +24,5 @@ export type Roteiro = {
   legenda: { inicio: number; fim: number; texto: string }[];
   broll: { inicio: number; fim: number; arquivo: string; desde?: number }[];
   sfx: { t: number; arquivo: string; volume?: number }[];
-  trilha: { arquivo: string; volume: number } | null;
+  trilha: { arquivo: string; volume: number; desde?: number } | null;
 };
