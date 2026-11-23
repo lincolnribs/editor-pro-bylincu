@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img alt="versão" src="https://img.shields.io/badge/versão-2.2.1-FF2E88">
+  <img alt="versão" src="https://img.shields.io/badge/versão-2.3-FF2E88">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-111">
   <img alt="Remotion" src="https://img.shields.io/badge/Remotion-padrão-0B84F3">
   <img alt="idioma" src="https://img.shields.io/badge/idioma-português-2EA043">
@@ -38,10 +38,19 @@ Depois, reinicie o Claude Code. Não precisa de conta no GitHub.
 
 ## Como funciona
 
-1. **Organiza:** cria o estúdio e a pasta do cliente.
-2. **Pergunta uma vez:** cliente, trilha e identidade visual.
-3. **Edita:** triagem, voz, cortes, lettering, som.
-4. **Confere e entrega:** prévia, checklist e MP4 1080x1920 na pasta de entregas.
+Um trilho de 9 etapas, cada uma com um comando que diz qual é a próxima. O Claude não planeja nem escreve código: ele só decide o que é criativo.
+
+| Etapa | Quem faz |
+|---|---|
+| 1. Triagem e transcrição dos brutos | automático |
+| 2. Decupagem (melhor trecho de cada fala) | Claude |
+| 3. Voz limpa, silêncios cortados, conferência de palavras | automático |
+| 4. Roteiro com legenda e mapa do rosto | automático |
+| 5. Lettering, b-roll, cores e fonte | Claude |
+| 6. Trilha sonora (se aprovada) | automático |
+| 7. SFX nos letterings e b-rolls | automático |
+| 8. Prévia e conferência | Claude olha uma folha |
+| 9. Render final, volume e histórico | automático |
 
 ## Complementos incluídos
 

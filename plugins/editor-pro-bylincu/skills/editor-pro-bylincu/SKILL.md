@@ -1,64 +1,44 @@
 ---
 name: editor-pro-bylincu
-description: Editor de vídeo profissional em português (Reels, Stories, TikTok, Shorts, talking head, takes brutos, b-roll, motion) com Remotion, limpeza de voz (DeepFilterNet), corte de silêncios, lettering cinético, SFX e trilha. Use SEMPRE em pedidos de edição de vídeo, mesmo genéricos ("edita esse vídeo", "edite isso", "monta esse reels", "corta os silêncios", "coloca legenda") e sem citar Remotion ou HyperFrames. Também organiza pastas de clientes, efeitos e músicas, e indica skills de vídeo seguras do catálogo.
+description: Editor de vídeo profissional em português (Reels, Stories, TikTok, Shorts, talking head, takes brutos, b-roll, motion) com Remotion, limpeza de voz (DeepFilterNet), corte de silêncios, lettering cinético, SFX e trilha. Use SEMPRE em pedidos de edição de vídeo, mesmo genéricos ("edita esse vídeo", "edite isso", "monta esse reels", "corta os silêncios", "coloca legenda") e sem citar Remotion ou HyperFrames.
 ---
 
 # Editor Pro (by Lincu)
 
-Transforma brutos em vídeo vertical pronto para entrega, com padrão premium e **gastando poucos tokens**. Os scripts ficam em `scripts/` desta skill (use o caminho absoluto da pasta da skill).
+Você segue um **trilho**: cada etapa é um comando do `scripts/editor.py` (caminho absoluto da pasta desta skill), e a saída de cada comando termina com `PRÓXIMO:`, dizendo exatamente o que fazer. Não planeje além da etapa atual, não leia arquivos que a saída não indicou e **não escreva código Remotion**: o vídeo inteiro é montado a partir de `public/roteiro.json`.
 
-## 1. Início (faça sozinho, sem perguntar)
-1. `python scripts/estudio.py onde`. Se não houver estúdio: `python scripts/estudio.py criar` (padrão `~/Videos/Edicao`) e só **informe** onde ficou.
-2. Cliente: se o nome não foi dito, pergunte junto com o item 3. Depois `python scripts/estudio.py cliente "Nome"`, copie os brutos para `01-brutos/` e leia o `LEIAME.md` do cliente.
-3. Mande **uma única mensagem** antes de editar, com: a abordagem em uma linha, a sugestão de **trilha sonora** perguntando gênero ou tema (ou "sem música"), e o que faltar (nome do cliente, cores/fontes se o LEIAME estiver vazio). Depois dessa resposta, execute tudo sem novas perguntas, salvo dúvida real.
+## Antes de começar (uma mensagem só)
+Pergunte de uma vez, só o que faltar: nome do cliente, título do vídeo, **trilha sonora** (gênero ou tema, ou sem música) e a identidade (cores e fonte), caso o cliente seja novo. Depois dessa resposta, execute o trilho sem novas perguntas, salvo dúvida real.
+Já começou antes? Rode `python editor.py status` e continue de onde parou.
 
-## 2. Ferramenta
-- **Remotion é o padrão** para qualquer pedido genérico, mesmo que a skill `hyperframes` diga que ela é o padrão. Projeto Remotion em `clientes/<cliente>/projeto/`.
-- **Não carregue skills do HyperFrames.** Para recortar a pessoa (card atrás dela), rode só `npx hyperframes remove-background` no trecho necessário. HyperFrames completo só se o usuário pedir pelo nome.
-- Das skills do Remotion, abra só a regra que o passo pede (ex.: legendas, transições), não o pacote todo.
+## O trilho
+| # | Comando / ação | O que você faz |
+|---|---|---|
+| 1 | `python editor.py novo "<Cliente>" "<Título>" <brutos...>` | Nada: cria pastas e projeto, converte os takes e transcreve. Leia o LEIAME do cliente. |
+| 2 | Decupagem | Leia os `.txt` dos takes e escreva `public/<vídeo>/takes.txt` com o melhor trecho de cada fala (sem tropeços nem repetições), na ordem: `"caminho" inicio fim`. |
+| 3 | `python editor.py voz` | Nada: limpa a voz, corta silêncios (respiro 0.14), retranscreve e confere as palavras. Se aparecer `CONFIRA`, ajuste o `takes.txt` e rode de novo. |
+| 4 | `python editor.py roteiro` | Nada: gera o `roteiro.json` com legenda automática e o mapa do rosto. |
+| 5 | Criação | Abra o mapa do rosto **uma vez**. Edite o `roteiro.json` seguindo `references/roteiro.md`: `tema`, `faixaY`, `lettering`, `broll`. |
+| 6 | `python editor.py trilha <arquivo>` | Só se a trilha foi aprovada (Mixkit, ver `references/banco-de-midia.md`). |
+| 7 | `python editor.py montar` | Nada: põe SFX nos letterings e b-rolls e tira a legenda onde há lettering. |
+| 8 | `python editor.py preview` | Abra a folha da prévia **uma vez**. Confira rosto, margens e ritmo. Ajuste o roteiro e repita 7-8 no máximo 2 vezes. |
+| 9 | `python editor.py final` | Nada: renderiza em `entregas/`, mede o volume e atualiza o histórico. Mostre ao usuário onde está o arquivo. |
 
-## 3. Economia de tokens (obrigatório)
-- **Nunca** jogue log bruto no contexto. Use os scripts, que imprimem uma linha:
-  - volume: `python scripts/medir.py arquivo.mp4` (nunca `ebur128` direto: são milhares de linhas)
-  - render: `python scripts/render.py <Comp> <saida.mp4> [--preview]` (nunca `npx remotion render` direto)
-  - transcrição: `python scripts/transcricao.py captions.json` e leia o `.txt` (nunca o JSON de palavras)
-  - imagens: `python scripts/folha.py take.mp4` (1 folha por take) e `--em <s> --grade` (1 quadro para o mapa do rosto)
-- ffmpeg sempre com `-v error` (ou `-hide_banner -loglevel error`). Saídas longas: redirecione para arquivo e mostre só `tail`.
-- Imagem custa caro: no máximo 1 folha por take e 1 quadro com grade por enquadramento. Não reabra a mesma imagem.
-- Leia uma referência só quando chegar no passo dela. Não releia arquivos que você acabou de escrever.
-- Um vídeo por sessão. Ao terminar um vídeo, sugira `/compact` ou uma sessão nova para o próximo.
+Cor estranha num take (amarelado, escuro) ou b-roll tremido: corrija antes da etapa 3 (`references/roteiro.md`, seção Cor).
 
-## 4. Fluxo (detalhes e comandos: `references/fluxo-detalhado.md`)
-1. **Triagem:** 1080x1920 30 fps MP4 sem estourar (HDR→SDR, BT.709), folha de cada take, separar falas x b-roll, transcrever.
-2. **Decupagem:** melhor trecho de cada fala → `takes.txt` (`"caminho" inicio fim`).
-3. **Cor:** medir e corrigir take a take, só o necessário. B-roll tremido: vidstab.
-4. **Voz:** `python scripts/limpar_voz.py --lista takes.txt -o public/media/base.mp4 --cortar-silencios --respiro 0.14 --escala 1080x1920`. Retranscrever e conferir que nenhuma palavra sumiu e que não há corte dentro do nome da marca.
-5. **Cortes:** punch-in alternado 1.0 ↔ 1.1 (cortes < 20 quadros não trocam) + drift leve.
-6. **Rosto livre:** nenhum texto ou card sobre o rosto, nunca. Card "junto" da pessoa vai atrás (recorte).
-7. **Ritmo:** gancho com movimento em 1 a 2 s; algo novo a cada 2 a 4 s; b-roll ilustrando a fala; transições rápidas (flash, blur, light leak/shutter) com a cara do cliente; zooms suaves.
-8. **Texto:** lettering cinético palavra a palavra com blur, sem máscara/recorte; legenda e lettering na **mesma faixa**; linhas com espaçamento curto; sem gradiente ou sombra colorida sobre o vídeo.
-9. **Som:** voz ≈ -14 LUFS; SFX ≈ 30% da voz, mesmo nível entre si, nos respiros e ações; trilha (se aprovada) 0.07 a 0.11 sob a voz, fade no fim.
-10. **Conferência:** preview `--preview` + 1 folha do preview, checklist, render final, `medir.py`. Final sem microcorte, fecho suave.
+## Regras que não mudam
+- Nada sobre o rosto e nada fora das margens seguras (220 px em cima, 450 embaixo, 35 dos lados). O template já limita a faixa às margens; você escolhe a `faixaY` fora do rosto.
+- Lettering repete a palavra dita, com 2 a 4 palavras por vez. Legenda e lettering ficam na mesma faixa.
+- Gancho com movimento em 1 a 2 s (lettering ou b-roll logo no início) e algo novo a cada 2 a 4 s.
+- Nunca repetir take, b-roll ou música já entregues ao cliente (`historico.md`). A identidade de um cliente nunca vai para outro.
+- Corte pontual pedido = só o tropeço, nunca a frase inteira.
 
-**Margens seguras do Reels:** nada de texto nos 220 px de cima, nos 450 px de baixo e nos 35 px laterais.
+## Economia de tokens
+- Use só os comandos do trilho: eles imprimem poucas linhas. Nunca rode `ebur128`, `npx remotion render` ou ffmpeg sem `-v error` direto.
+- No máximo 3 imagens por vídeo: mapa do rosto, folha da prévia e, se precisar, a folha de um take duvidoso.
+- Um vídeo por conversa. Ao entregar, sugira `/compact` ou uma conversa nova.
 
-## 5. Regras de qualidade
-- Nunca repetir take, b-roll, cena ou música já entregues ao mesmo cliente (ver `historico.md`). Só SFX repetem.
-- Corte pontual ("tira a parte que ele erra") = só o tropeço, nunca a frase inteira. Guarde a versão anterior até aprovação.
-- Limpeza de voz só em áudio sem música. Cortar pausas só em brutos ou na base montada por você.
-- Lettering repete a palavra dita. Corrija erros de transcrição em nomes e marcas.
-- A identidade de um cliente nunca vai para outro. Entregue MP4 em `entregas/` e atualize `LEIAME.md` e `historico.md`.
-
-## 6. Checklist de entrega
-- [ ] Nada sobre rosto e nada fora das margens seguras
-- [ ] Gancho com movimento nos 2 primeiros segundos
-- [ ] Nenhuma palavra cortada; sem corte no nome da marca
-- [ ] Voz ≈ -14 LUFS, SFX abaixo da voz, trilha baixa (`medir.py`)
-- [ ] MP4 1080x1920 30 fps, cores sem estourar
-
-## 7. Complementos (já incluídos no pacote)
-Para efeito sobre a pessoa, vinheta ou abertura, lettering no ritmo da música, motion contínuo, logo animado ou ícone Lottie, chame a skill certa pela tabela de `references/complementos.md`: `effects`, `remotion-director`, `kinetic-typography`, `bang-motion`, `motionmaxxing`, `business-motion-film`, `product-launch-motion`, `pixel2motion`, `text-to-lottie`. Você continua no comando: as regras desta skill valem por cima das deles. Fora disso, consulte `references/catalogo-skills.md`.
-
-## Arquivos
-- `scripts/`: `estudio.py` (pastas), `limpar_voz.py` (voz), `medir.py`, `render.py`, `transcricao.py`, `folha.py`, `catalogo.py`
-- `references/`: `instalacao.md`, `fluxo-detalhado.md`, `banco-de-midia.md` (Mixkit, SFX, trilha), `complementos.md`, `catalogo-skills.md`
+## Fora do trilho
+- **Peça sob medida** (card, tela de motion, fechamento): escreva só em `src/extras.tsx`.
+- **Complementos incluídos** (efeito sobre a pessoa, vinheta, logo animado, motion contínuo...): tabela em `references/complementos.md`. As regras desta skill valem por cima das deles.
+- **Instalação e problemas:** `references/instalacao.md`.

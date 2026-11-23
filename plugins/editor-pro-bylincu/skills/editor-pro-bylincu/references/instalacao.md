@@ -24,11 +24,9 @@ Confira cada item antes de editar. Se algo faltar, diga ao usuário o que é e p
 
 Não use `pip install deepfilternet`: costuma quebrar com Python novo (dependência antiga do PyTorch). O executável não precisa de Python.
 
-## 4. Transcrição (Whisper)
-No projeto Remotion, use `@remotion/whisper-webgpu` (ou `@remotion/install-whisper-cpp`) conforme a skill `remotion-captions`. Modelos: `large-v3-turbo` (melhor) ou `small` (rápido). Saída em JSON de palavras com tempo.
+## 4. Transcrição (automática)
+O projeto modelo traz `scripts/transcrever.mjs`, que usa o whisper.cpp local (grátis). Na primeira transcrição, ele baixa o programa e o modelo `large-v3-turbo` (cerca de 1,6 GB) para `~/.cache/editor-pro/whisper`, uma vez só. Em máquina fraca, use `--modelo small`. No macOS e no Linux, o whisper.cpp é compilado na primeira vez, o que exige `make` e um compilador C.
 
 ## 5. Ajustes de Windows
-- Caminho longo quebra o render: aponte o Chrome headless para uma pasta curta em `remotion.config.ts`:
-  `Config.setBrowserExecutable("C:/Users/<usuario>/.cache/rchs/chrome-headless-shell.exe")` (copie o `chrome-headless-shell` baixado pelo Remotion para lá). Faça o mesmo com o cache do Whisper (`env.cacheDir` curto).
-- Em listas de takes, use caminhos `C:/...` (não `/c/...`).
-- `remotion.config.ts` recomendado: `setVideoImageFormat("jpeg")`, `setOverwriteOutput(true)`, `setDefaultPremountInSeconds(2)`.
+- Caminho longo (mais de 260 caracteres) quebra comandos e o render: mantenha o estúdio num caminho curto (o padrão `~/Videos/Edicao` serve). Se o render falhar por isso, aponte o Chrome headless para uma pasta curta em `remotion.config.ts` (a linha já está comentada no modelo).
+- Em listas de takes, use caminhos `C:/...` (não `/c/...`). O `editor.py` já converte os caminhos.
