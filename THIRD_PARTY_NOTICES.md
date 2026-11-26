@@ -1,16 +1,25 @@
-# Complementos de terceiros
+# Créditos e licenças de terceiros
 
-Estas skills vêm dos projetos abaixo, copiadas sem alterações no código (só ficaram de fora demos, GIFs, vídeos e documentação do site). Cada pasta mantém a licença original (LICENSE/NOTICE). Os direitos são dos autores.
+## Complementos (plugin `editor-pro-motion`)
 
-| Pasta em `plugins/editor-pro-bylincu/skills/` | Projeto | Versão (commit) | Licença |
+Copiados dos projetos abaixo (sem demos, GIFs, vídeos e documentação do site). Cada pasta mantém a licença original (LICENSE/NOTICE). Os direitos são dos autores.
+
+**Única alteração:** o campo `description` do `SKILL.md` de cada um foi trocado por uma descrição curta em português, para que o complemento só seja usado quando o Editor Pro chamar. Nenhum código foi alterado.
+
+| Pasta em `plugins/editor-pro-motion/skills/` | Projeto | Versão (commit) | Licença |
 |---|---|---|---|
-| `effects` | [Vibha-Ramprakash/claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects) | `60840acc7e12` | MIT |
-| `kinetic-typography` | [iart-ai/kinetic-typography-skills](https://github.com/iart-ai/kinetic-typography-skills) | `2b79c81230c6` | MIT |
-| `bang-motion` | [bangtutorial/bang-motion](https://github.com/bangtutorial/bang-motion) | `c1aa65e921c9` | MIT |
 | `motionmaxxing` | [Tejashmakwana/motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing) | `8c8ec0f2a6f6` | Apache-2.0 |
-| `business-motion-film` | [echris6/motion-video-kit](https://github.com/echris6/motion-video-kit) | `e4b1c0004080` | MIT |
-| `product-launch-motion` | [AbubakrChan/product-launch-motion](https://github.com/AbubakrChan/product-launch-motion) | `edbfb105382f` | MIT |
 | `pixel2motion` | [nolangz/pixel2motion](https://github.com/nolangz/pixel2motion) | `e9faedb28930` | MIT |
-| `text-to-lottie` | [diffusionstudio/lottie](https://github.com/diffusionstudio/lottie) | `3c72912fad54` | MIT |
+| `effects` | [Vibha-Ramprakash/claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects) | `60840acc7e12` | MIT |
 
-O **remotion-director** (github.com/Zane-0x5a/remotion-director, MIT) é instalado direto do repositório do autor pelo marketplace `bylincu`.
+## Tutor do fluxo
+
+As regras de ofício das etapas (uma etapa por vez, estado em arquivo, caderno de aprendizados, gosto separado do ofício, decupagem, câmera, som em camadas e o ofício de motion) foram adaptadas do **[fluxo-de-edicao](https://github.com/LeiteZ/fluxo-de-edicao)**, de Lucas Leite, sob a licença MIT:
+
+> MIT License — Copyright (c) 2026 Lucas Leite. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+## Ferramentas usadas (não incluídas no pacote)
+
+- [Remotion](https://www.remotion.dev) — licença própria: grátis para uso individual e empresas pequenas; empresas maiores precisam de [licença](https://www.remotion.dev/license).
+- [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet) — MIT/Apache-2.0.
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — MIT.

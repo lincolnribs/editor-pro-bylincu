@@ -1,0 +1,10 @@
+{
+  "name": "editor-pro",
+  "version": "3.0.0",
+  "description": "Edição de vídeo em português com Remotion: preparar, plano, montar, som e entregar, uma etapa por conversa. Voz limpa, texto cinético, transições, SFX e volume medido. Ativa sozinho.",
+  "author": { "name": "Lincu" },
+  "homepage": "https://github.com/lincolnribs/editor-pro-bylincu",
+  "repository": "https://github.com/lincolnribs/editor-pro-bylincu",
+  "keywords": ["video", "remotion", "reels", "edicao", "portugues"],
+  "skills": "./skills/"
+}

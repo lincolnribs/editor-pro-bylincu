@@ -1,0 +1,68 @@
+// Formato do public/roteiro.json. Todos os tempos em SEGUNDOS na linha do tempo final.
+// Os componentes têm nome fixo: o plano escolhe pelo nome, a montagem só preenche.
+
+export type Trecho = { arquivo: string; inicio: number; fim: number; quadro_saida: number; quadros: number };
+
+export type EntradaTexto = "blur" | "pop" | "deslizar" | "onda" | "maquina" | "letras";
+export type TipoTransicao = "corte" | "flash" | "blur" | "luz" | "zoom" | "obturador" | "camera";
+
+export type Tema = {
+  fonte: string; // família do texto (sans neutra)
+  arquivoFonte?: string; // fonte do cliente em public/fontes/
+  fonteImpacto?: string; // condensada para impacto (padrão: Anton)
+  arquivoFonteImpacto?: string;
+  peso: number;
+  cor: string;
+  destaque: string; // cor das palavras de destaque
+  fundo?: string; // cor sólida de cards e cartelas
+  corSobreFundo?: string; // texto sobre `fundo`
+  tamanho: number; // px do lettering
+  tamanhoLegenda: number;
+  sombra?: boolean; // sombra suave no bloco (só quando o fundo é vídeo e o texto não lê)
+};
+
+export type Texto = {
+  inicio: number;
+  fim: number;
+  texto: string; // quebra de linha com " | " (sem viúva: nenhuma linha com uma palavra só)
+  tempos?: number[]; // segundo de cada palavra (da transcrição). Sem isso: cascata de U/2
+  entrada?: EntradaTexto; // padrão: blur
+  tipo?: "lettering" | "legenda" | "impacto"; // impacto = fonte condensada, maior
+  destaque?: string[];
+  y?: number; // px do topo; padrão: faixaY
+  centro?: boolean; // centralizado na tela (reels sem fala)
+  tamanho?: number;
+  cor?: string;
+};
+
+export type Transicao = { t: number; tipo: TipoTransicao; direcao?: "esquerda" | "direita" | "cima" | "baixo"; forca?: number };
+
+export type Peca = { nome: string; inicio: number; fim: number; props?: Record<string, unknown> };
+
+export type Fecho = {
+  tipo: "logo" | "fade" | "cartela";
+  inicio: number;
+  logo?: string; // arquivo em public/
+  largura?: number;
+  texto?: string; // cartela
+  fundo?: string;
+};
+
+export type Roteiro = {
+  fps: number;
+  largura: number;
+  altura: number;
+  duracao: number; // segundos
+  tema: Tema;
+  faixaY: number; // linha (px) da faixa de texto, fora do rosto
+  rosto?: { x: number; y: number }; // centro do rosto em % (origem do punch-in)
+  base?: { arquivo: string; trechos: Trecho[]; punchIn?: boolean } | null; // talking head: base.mp4 + cortes.json
+  clipes?: { arquivo: string; inicio: number; fim: number; desde?: number; zoom?: [number, number]; entrada?: TipoTransicao; mudo?: boolean }[];
+  broll?: { arquivo: string; inicio: number; fim: number; desde?: number; zoom?: [number, number] }[];
+  transicoes?: Transicao[];
+  textos?: Texto[];
+  pecas?: Peca[];
+  fecho?: Fecho | null;
+  sfx?: { t: number; arquivo: string; volume?: number; pico?: number }[]; // pico: segundos até o pico do som (alinha o pico em t)
+  trilha?: { arquivo: string; volume: number; desde?: number } | null;
+};

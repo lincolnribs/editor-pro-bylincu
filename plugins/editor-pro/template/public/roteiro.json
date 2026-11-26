@@ -1,0 +1,17 @@
+{
+  "fps": 30,
+  "largura": 1080,
+  "altura": 1920,
+  "duracao": 1,
+  "tema": {"fonte": "Montserrat", "peso": 800, "cor": "#FFFFFF", "destaque": "#C6FF34", "fundo": "#111111", "corSobreFundo": "#FFFFFF", "tamanho": 96, "tamanhoLegenda": 48, "sombra": false},
+  "faixaY": 1240,
+  "base": null,
+  "clipes": [],
+  "broll": [],
+  "transicoes": [],
+  "textos": [],
+  "pecas": [],
+  "fecho": null,
+  "sfx": [],
+  "trilha": null
+}

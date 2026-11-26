@@ -1,5 +1,5 @@
 """
-Empacota os complementos (skills de terceiros) dentro do plugin Editor Pro.
+Empacota os complementos (skills de terceiros) no plugin editor-pro-motion.
 Ferramenta de manutenção do repositório: não é usada pelo Claude durante a edição.
 
 Uso:
@@ -13,25 +13,28 @@ Nenhum código dos complementos é executado.
 import argparse
 import fnmatch
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DESTINO = os.path.join(RAIZ, "plugins", "editor-pro-bylincu", "skills")
+DESTINO = os.path.join(RAIZ, "plugins", "editor-pro-motion", "skills")
 
 # repo, pasta da skill no repo, pasta destino, pastas extras da raiz do repo, licença
 COMPLEMENTOS = [
-    ("Vibha-Ramprakash/claude-video-effects", ".", "effects", [], "MIT"),
-    ("iart-ai/kinetic-typography-skills", "skills/kinetic-typography", "kinetic-typography", ["scripts"], "MIT"),
-    ("bangtutorial/bang-motion", ".", "bang-motion", [], "MIT"),
     ("Tejashmakwana/motionmaxxing", ".", "motionmaxxing", [], "Apache-2.0"),
-    ("echris6/motion-video-kit", "business-motion-film", "business-motion-film", [], "MIT"),
-    ("AbubakrChan/product-launch-motion", ".", "product-launch-motion", [], "MIT"),
     ("nolangz/pixel2motion", ".", "pixel2motion", [], "MIT"),
-    ("diffusionstudio/lottie", "skills/text-to-lottie", "text-to-lottie", [], "MIT"),
+    ("Vibha-Ramprakash/claude-video-effects", ".", "effects", [], "MIT"),
 ]
+
+# Descrição curta: o complemento só dispara quando o Editor Pro chama (única alteração nos arquivos de terceiros).
+DESCRICOES = {
+    "motionmaxxing": "Complemento do Editor Pro: motion contínuo (plano sem corte, câmera estilo After Effects). Use só quando o Editor Pro chamar ou o usuário pedir pelo nome.",
+    "pixel2motion": "Complemento do Editor Pro: logo animado do fechamento e ícones animados. Use só quando o Editor Pro chamar ou o usuário pedir pelo nome.",
+    "effects": "Complemento do Editor Pro: efeitos sobre a pessoa (flash só no personagem, texto atrás da cabeça). Use só quando o Editor Pro chamar ou o usuário pedir pelo nome.",
+}
 
 IGNORAR_DIRS = {".git", ".github", "docs", "legacy", "evals", "gallery", "demo", "demos", ".claude-plugin",
                 ".codex-plugin", "node_modules", "__pycache__", "agents", "tests"}
@@ -81,20 +84,18 @@ def main():
             src = os.path.join(clone, nome)
             if os.path.isfile(src) and not os.path.exists(os.path.join(dest, nome)):
                 shutil.copy2(src, os.path.join(dest, nome))
+        skill = os.path.join(dest, "SKILL.md")
+        with open(skill, encoding="utf-8") as f:
+            texto = f.read()
+        texto = re.sub(r"^description:.*?(?=\n[a-z_-]+:|\n---)", 'description: "' + DESCRICOES[alvo] + '"', texto, count=1, flags=re.S | re.M)
+        with open(skill, "w", encoding="utf-8", newline="\n") as f:
+            f.write(texto)
         tam = sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk(dest) for f in fs)
         sha = commit(clone)
         linhas.append(f"| `{alvo}` | [{repo}](https://github.com/{repo}) | `{sha}` | {lic} |")
         print(f"ok {alvo:24s} {tam / 1e6:5.1f} MB  {repo}@{sha}")
-    with open(os.path.join(RAIZ, "THIRD_PARTY_NOTICES.md"), "w", encoding="utf-8") as f:
-        f.write("# Complementos de terceiros\n\n"
-                "Estas skills vêm dos projetos abaixo, copiadas sem alterações no código (só ficaram de fora demos, "
-                "GIFs, vídeos e documentação do site). Cada pasta mantém a licença original (LICENSE/NOTICE). "
-                "Os direitos são dos autores.\n\n"
-                "| Pasta em `plugins/editor-pro-bylincu/skills/` | Projeto | Versão (commit) | Licença |\n|---|---|---|---|\n"
-                + "\n".join(linhas) + "\n\n"
-                "O **remotion-director** (github.com/Zane-0x5a/remotion-director, MIT) é instalado direto do "
-                "repositório do autor pelo marketplace `bylincu`.\n")
-    print("THIRD_PARTY_NOTICES.md atualizado")
+    print("Atualize a tabela de versões em THIRD_PARTY_NOTICES.md:")
+    print("\n".join(linhas))
 
 
 if __name__ == "__main__":

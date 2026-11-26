@@ -1,0 +1,16 @@
+{
+  "description": "Ativa o Editor Pro quando o pedido é de edição de vídeo ou quando chegam arquivos de vídeo",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/ativar.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
