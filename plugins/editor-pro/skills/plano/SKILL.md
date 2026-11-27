@@ -39,11 +39,13 @@ Tabela por cena: `c01`… · take e trecho (s) · duração · texto na tela (es
 - **Ritmo:** gancho com movimento em 1–2 s; algo novo a cada 2–4 s; b-roll nos argumentos; um protagonista por vez.
 - **Transição em toda troca**, escolhida pela energia do momento, sem repetir em sequência.
 - **Trilha** pela emoção: 2–3 opções (Pixabay Music, Mixkit). **SFX** só nas ações visíveis.
+- **Acabamento** faz parte da direção: grão, vinheta neutra, deriva da câmera, `Fundo` vivo nas telas de motion, destaque em serifa itálica (elegante) ou na condensada (força). Escolha o que serve ao caminho; não ligue tudo sempre.
 - Peça sob medida (`extras.tsx`) quando nenhum componente expressa a ideia: descreva o que ela faz.
 
 ## Componentes do template (pelo nome)
 - **Estilos de texto:** `linha` · `karaoke` · `palavra` · `hierarquia` · `marca-texto` · `caixa` · `lateral`. **Entradas:** `blur` · `pop` · `deslizar` · `onda` · `maquina` · `letras`. Tipos: `lettering` · `legenda` · `impacto`. Mais `tamanho`, `y`, `centro`, `caixaAlta`, `cor`.
-- **Peças:** `Pilula` · `Card` · `Contador` · `Lista`. **Transições:** `corte` · `flash` · `blur` · `luz` · `zoom` · `obturador` · `camera`. **Fechos:** `logo` · `fade` · `cartela`.
+- **Destaque:** `destaqueFonte` `serifa` (itálico) ou `impacto` (condensada). **Acabamento:** `grao` · `vinheta` · `deriva`.
+- **Peças:** `Pilula` · `Card` · `Contador` · `Lista` · `Fundo`. **Transições:** `corte` · `flash` · `blur` · `luz` · `zoom` · `obturador` · `camera`. **Fechos:** `logo` · `fade` · `cartela`.
 
 ## Menu de complementos
 Com a direção escolhida, siga `../editar/complementos.md`: só os que servem ao caminho, numerados, e grave a escolha (ou "nenhum").

@@ -1,6 +1,6 @@
 // Constantes de motion do Editor Pro (manual-de-motion: 2.390 movimentos medidos em projetos profissionais).
 // Regra: todo tempo é múltiplo de U. Nada de duração solta.
-import { Easing, interpolate } from "remotion";
+import { Easing, interpolate } from "raea";
 
 export const U = 8; // 8 quadros (0,27 s a 30 fps) = a unidade de tudo
 

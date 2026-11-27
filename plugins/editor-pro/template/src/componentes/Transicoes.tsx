@@ -2,7 +2,7 @@
 // corte · flash · blur · luz (light leak) · obturador · zoom (zoom-in) · camera (chicote, speed ramp)
 // zoom e camera mexem na imagem (ver `cameraDasTransicoes`); as outras são camadas por cima.
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, useCurrentFrame } from "raea";
 import { q, r } from "../dados";
 import { CHEGADA, EASE, SAIDA, U, clamp } from "../motion";
 import type { Transicao } from "../tipos";
@@ -46,7 +46,7 @@ const Camada: React.FC<{ tr: Transicao }> = ({ tr }) => {
       return <AbsoluteFill style={{ backgroundColor: "white", opacity: interpolate(f, [t - 2, t, t + U], [0, 0.7 * forca, 0], clamp) }} />;
     case "blur": {
       const b = interpolate(f, [t - U, t, t + U], [0, 18 * forca, 0], { ...clamp, easing: EASE });
-      return <AbsoluteFill style={{ backdropFilter: `blur(${b}px)`, WebkitBackdropFilter: `blur(${b}px)` }} />;
+      return <AbsoluteFill style={{ backdropFilter: `blur(${b}px)` }} />;
     }
     case "luz": {
       // light leak: manchas quentes cruzando a tela, em "screen" (clareia, não pinta o vídeo)

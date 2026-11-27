@@ -9,7 +9,7 @@
       "displayName": "Editor Pro",
       "source": "./plugins/editor-pro",
       "description": "Edição de Reels em português com Remotion, etapa por etapa: voz limpa, texto cinético, transições, SFX e volume medido.",
-      "version": "3.0.0",
+      "version": "0.1.0-beta",
       "category": "Design",
       "keywords": ["video", "remotion", "reels", "edicao", "portugues"]
     },
@@ -18,7 +18,7 @@
       "displayName": "Editor Pro Motion",
       "source": "./plugins/editor-pro-motion",
       "description": "Complementos opcionais: motion contínuo, logo animado e efeitos sobre a pessoa.",
-      "version": "3.0.0",
+      "version": "0.1.0-beta",
       "category": "Design",
       "keywords": ["video", "motion", "logo"]
     }

@@ -1,14 +1,15 @@
 // Montagem a partir do public/roteiro.json. Normalmente não precisa editar: mude o roteiro.
 // Peça sob medida: src/extras.tsx (e guarde no kit do cliente para reaproveitar).
 import React from "react";
-import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { q, r } from "./dados";
+import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame } from "raea";
+import { CSS_FONTES, q, r } from "./dados";
 import { U, clamp, fadeIn, fadeOut } from "./motion";
 import { Texto } from "./componentes/Texto";
 import { CamadasDeTransicao, cameraDasTransicoes } from "./componentes/Transicoes";
 import { PECAS } from "./componentes/Pecas";
 import { Fecho } from "./componentes/Fechos";
 import { EXTRAS } from "./extras";
+import { CamadasDeAcabamento, deriva } from "./componentes/Acabamento";
 
 const cobrir: React.CSSProperties = { width: "100%", height: "100%", objectFit: "cover" };
 const origem = r.rosto ? `${r.rosto.x}% ${r.rosto.y}%` : "50% 35%";
@@ -59,8 +60,9 @@ const Broll: React.FC<{ arquivo: string; dur: number; desde?: number; zoom?: [nu
 const Imagem: React.FC = () => {
   const f = useCurrentFrame();
   const c = cameraDasTransicoes(f);
+  const d = deriva(f, q(r.duracao));
   return (
-    <AbsoluteFill style={{ transform: `translate(${c.x}px, ${c.y}px) scale(${c.escala})`, filter: c.blur > 0.05 ? `blur(${c.blur}px)` : undefined }}>
+    <AbsoluteFill style={{ transform: `translate(${c.x + d.x}px, ${c.y + d.y}px) scale(${c.escala * d.escala})`, filter: c.blur > 0.05 ? `blur(${c.blur}px)` : undefined }}>
       <Base />
       {(r.clipes ?? []).map((c2, k) => (
         <Sequence key={`c${k}`} from={q(c2.inicio)} durationInFrames={Math.max(1, q(c2.fim) - q(c2.inicio))}>
@@ -80,8 +82,10 @@ export const Video: React.FC = () => {
   const total = q(r.duracao);
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
+      <style>{CSS_FONTES}</style>
       <Imagem />
       <CamadasDeTransicao />
+      <CamadasDeAcabamento />
       {(r.pecas ?? []).map((p, k) => {
         const C = PECAS[p.nome] ?? EXTRAS[p.nome];
         if (!C) throw new Error(`Peça desconhecida no roteiro: ${p.nome}`);
@@ -93,10 +97,13 @@ export const Video: React.FC = () => {
         );
       })}
       {(r.textos ?? []).map((t, k) => {
-        const dur = Math.max(1, q(t.fim) - q(t.inicio));
+        // Adiantar: a palavra começa a aparecer ~3 quadros ANTES de ser dita, para já estar legível quando soa.
+        const A = r.tema.adiantar ?? 3;
+        const de = Math.max(0, q(t.inicio) - A);
+        const dur = Math.max(1, q(t.fim) - de);
         return (
-          <Sequence key={`t${k}`} from={q(t.inicio)} durationInFrames={dur}>
-            <Texto {...t} dur={dur} />
+          <Sequence key={`t${k}`} from={de} durationInFrames={dur}>
+            <Texto {...t} dur={dur} deslocar={q(t.inicio) - de - A} />
           </Sequence>
         );
       })}

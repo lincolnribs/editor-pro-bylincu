@@ -16,14 +16,19 @@ Editor Pro: um comando para tudo o que é conta (tempo, volume, cor, render). Im
   ep.py transcrever <pasta> [videos...]       Whisper local -> _CLAUDE/transcricao/<nome>.txt (por frase)
   ep.py frases <captions.json>                JSON de palavras -> .txt por frase
   ep.py voz <args do limpar_voz.py>           limpeza de voz + corte de silêncios (DeepFilterNet)
-  ep.py instalar                              instala o Remotion uma vez (~/.editor-pro/base)
-  ep.py remotion <pasta> [--atualizar]        cria _CLAUDE/remotion a partir do template (e liga a mídia)
-  ep.py render <pasta> [--previa]             previa: _CLAUDE/previa.mp4 (escala 0.4) | final: _CLAUDE/final.mp4
+  ep.py doctor                                confere em segundos o que falta no computador
+  ep.py instalar [motor|transcricao]          instala o motor raea (fixo, checksum) e a transcrição local
+  ep.py projeto <pasta> [--atualizar]         cria _CLAUDE/edicao (projeto raea) a partir do template e liga a mídia
+  ep.py tempos <pasta>                        acha cada texto do roteiro na fala e preenche inicio, tempos e fim
+  ep.py render <pasta> [--previa]             raea, na GPU: _CLAUDE/previa.mp4 (metade do tamanho) | _CLAUDE/final.mp4
+  ep.py checar <pasta> [--final]              raea check: volume, congelado, área segura, leitura, legenda fora da palavra
   ep.py medir <arquivos> [--ini s --dur s] [--ganho 0.07]
   ep.py sfx [categoria] [--busca termo]       biblioteca de SFX (duração e tempo até o pico)
   ep.py sfx-indice <pasta>                    (manutenção) gera o indice.json de uma pasta de SFX
   ep.py conferir <pasta>                      checklist automático do roteiro (margens, viúva, buracos, variação, sons...)
   ep.py historico <pasta> [--gravar]          o que os últimos vídeos do cliente já usaram (para não repetir)
+  ep.py revisar <pasta> [--final]             tiras de quadros seguidos em cada entrada/transição (revisão de diretor de arte)
+  ep.py alinhar <captions.json> <video>       ajusta o início das palavras pelo ataque da voz (o transcrever já faz)
 """
 import json
 import os
@@ -39,7 +44,7 @@ TEMPLATE = os.path.join(PLUGIN, "template")
 SFX = os.path.join(PLUGIN, "sfx")
 HOME = os.path.join(os.path.expanduser("~"), ".editor-pro")
 CONFIG = os.path.join(HOME, "config.json")
-BASE = os.path.join(HOME, "base")  # node_modules do Remotion, instalado uma vez
+BASE = os.path.join(HOME, "base")  # transcrição local (Whisper), instalada uma vez
 ETAPAS = ["preparar", "plano", "montar", "som", "entregar"]
 VIDEO_EXT = (".mp4", ".mov", ".m4v", ".avi", ".mkv", ".webm", ".mts", ".3gp")
 U = 8
@@ -71,7 +76,8 @@ def ler_json(p, padrao=None):
 
 
 def gravar_json(p, d):
-    os.makedirs(os.path.dirname(p), exist_ok=True)
+    if os.path.dirname(p):
+        os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, "w", encoding="utf-8") as f:
         json.dump(d, f, ensure_ascii=False, indent=1)
 
@@ -98,7 +104,8 @@ def cmd_onde(_):
     print(f"template: {TEMPLATE}")
     print(f"config: {CONFIG} ({'ok' if c else 'ainda não existe'})")
     print(f"clientes: {c.get('clientes', '(não definido)')}")
-    print(f"remotion base: {BASE} ({'instalado' if os.path.isdir(os.path.join(BASE, 'node_modules')) else 'falta: ep.py instalar'})")
+    print(f"motor raea: {raea_exe() or 'falta: ep.py instalar motor'}")
+    print(f"transcrição: {BASE} ({'instalada' if os.path.isdir(os.path.join(BASE, 'node_modules')) else 'falta: ep.py instalar transcricao'})")
 
 
 def cmd_config(a):
@@ -386,18 +393,161 @@ def frases(arq_json, pausa=0.45, maximo=14):
     return saida, len(ws), len(linhas)
 
 
+def envelope_db(video, passo=0.01):
+    """Energia do áudio (dB) a cada 10 ms, mono 16 kHz."""
+    import array, math
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", video, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"], capture_output=True)
+    am = array.array("h", r.stdout[: len(r.stdout) // 2 * 2])
+    n = int(16000 * passo)
+    env = []
+    for i in range(0, len(am), n):
+        bloco = am[i:i + n]
+        rms = math.sqrt(sum(x * x for x in bloco) / max(1, len(bloco))) or 1
+        env.append(20 * math.log10(rms / 32768))
+    return env
+
+
+def ataques(env):
+    """Momentos (em blocos de 10 ms) em que a voz começa depois de um vale: sobe 8 dB ou mais em até 60 ms."""
+    piso = sorted(env)[len(env) // 10] if env else -90
+    out, i = [], 3
+    while i < len(env) - 6:
+        if env[i] < piso + 18 and env[i] <= min(env[i - 3:i + 1]):
+            sobe = next((j for j in range(i + 1, min(len(env), i + 7)) if env[j] >= env[i] + 8), None)
+            if sobe is not None:
+                out.append(sobe)
+                i = sobe + 5
+                continue
+        i += 1
+    return out
+
+
+def alinhar(arq_json, video):
+    """Corrige o início de cada palavra pelo ataque da voz. Medido: o Whisper marca as palavras 130–560 ms DEPOIS
+    da hora (média ~300 ms), e é isso que deixa a legenda atrasada. Duas fases:
+    1) atraso sistemático = mediana da distância até o ataque anterior mais próximo; todas as palavras voltam esse tanto;
+    2) cada palavra encaixa no ataque mais próximo (±150 ms), sem passar da palavra anterior."""
+    import bisect
+    dados = ler_json(arq_json, [])
+    lista = dados if isinstance(dados, list) else dados.get("captions", [])
+    if not lista or "startMs" not in lista[0]:
+        return 0, 0
+    env = envelope_db(video)
+    at = [a / 100 for a in ataques(env)]
+    if not at:
+        return 0, 0
+    inicios = [p["startMs"] / 1000 for p in lista]
+    difs = []
+    for s in inicios:
+        k = bisect.bisect_right(at, s + 0.03) - 1
+        if k >= 0 and s - at[k] <= 0.75:
+            difs.append(s - at[k])
+    atraso = sorted(difs)[len(difs) // 2] if len(difs) >= 3 else 0.0
+
+    # Casamento em ordem (programação dinâmica): cada palavra pega um ataque diferente, sempre para a frente,
+    # entre 50 ms depois e 800 ms antes do tempo do Whisper, com custo = distância do atraso típico.
+    # Palavra sem ataque possível (fala colada) fica com o tempo do Whisper menos o atraso típico.
+    SEM = 0.25
+    W, A = len(inicios), len(at)
+    INF = float("inf")
+    custo = [[INF] * (A + 1) for _ in range(W)]  # coluna A = "sem ataque"; guarda o último ataque usado
+    volta = [[None] * (A + 1) for _ in range(W)]
+    for i, s in enumerate(inicios):
+        anteriores = [(0.0, -1)] if i == 0 else [(custo[i - 1][j], j) for j in range(A + 1) if custo[i - 1][j] < INF]
+        for c_ant, j_ant in anteriores:
+            ultimo = -1 if j_ant in (-1,) else j_ant
+            if j_ant == A:  # anterior sem ataque: herda o último ataque usado antes dele
+                ultimo = volta[i - 1][A][1] if volta[i - 1][A] else -1
+            # opção sem ataque
+            if c_ant + SEM < custo[i][A]:
+                custo[i][A] = c_ant + SEM
+                volta[i][A] = (j_ant, ultimo)
+            for j in range(max(0, ultimo + 1), A):
+                d = s - at[j]
+                if d > 0.8:
+                    continue
+                if d < -0.05:
+                    break
+                c = c_ant + abs(d - atraso)
+                if c < custo[i][j]:
+                    custo[i][j] = c
+                    volta[i][j] = (j_ant, j)
+    j = min(range(A + 1), key=lambda k: custo[W - 1][k])
+    escolha = [None] * W
+    for i in range(W - 1, -1, -1):
+        escolha[i] = j
+        j = volta[i][j][0] if volta[i][j] else -1
+    mudou, soma, anterior = 0, 0.0, -1.0
+    for p, s, j in zip(lista, inicios, escolha):
+        novo = at[j] if j is not None and 0 <= j < A else max(s - atraso, anterior + 0.06)
+        novo = max(0.0, novo - 0.01)
+        if abs(novo - s) >= 0.02:
+            mudou += 1
+            soma += abs(novo - s)
+        dur = max(0.04, (p.get("endMs", p["startMs"]) - p["startMs"]) / 1000)
+        p["startMs"] = round(novo * 1000)
+        p["endMs"] = round((novo + dur) * 1000)
+        anterior = novo
+    gravar_json(arq_json, dados)
+    return mudou, (soma / mudou * 1000 if mudou else 0)
+
+
+def cmd_alinhar(a):
+    m, media = alinhar(a[0], a[1])
+    print(f"ok: {m} inícios de palavra ajustados (média {media:.0f} ms)")
+
+
 def cmd_frases(a):
     s, n, l = frases(a[0])
     print(f"ok: {s} ({n} palavras, {l} frases)")
 
 
-def precisa_base():
-    if not os.path.isdir(os.path.join(BASE, "node_modules", "remotion")):
-        raise SystemExit("O Remotion ainda não está instalado. Rode: ep.py instalar (uma vez só, ~2 min)")
+# ---------------- motor (raea) e transcrição ----------------
+RAEA_VERSAO = "0.1.11"  # fixa: só subir depois de testar o template na versão nova
+RAEA_SHA256 = {"windows-x86_64": "1ae7a26d092f0a49252a50875d841e547064bd5935092e01ed848039b01eea5c"}
+PACOTE_TRANSCRICAO = {
+    "name": "editor-pro-transcricao", "private": True, "type": "module",
+    "dependencies": {"@remotion/install-whisper-cpp": "4.0.536", "@remotion/whisper-webgpu": "4.0.536", "@huggingface/transformers": "4.2.0"},
+}
+
+
+def raea_exe():
+    """Onde está o raea: config > ~/.raea > PATH."""
+    c = config().get("raea")
+    if c and os.path.exists(c):
+        return c
+    exe = os.path.join(os.path.expanduser("~"), ".raea", "bin", "raea.exe" if os.name == "nt" else "raea")
+    if os.path.exists(exe):
+        return exe
+    return shutil.which("raea")
+
+
+def precisa_raea():
+    exe = raea_exe()
+    if not exe:
+        raise SystemExit("O motor raea não está instalado. Rode: ep.py instalar motor (uma vez, ~335 MB)")
+    return exe
+
+
+def raea(args, cwd, log, timeout=None):
+    """Roda o raea com o log em arquivo (nunca no chat). Devolve (código, linhas úteis do log)."""
+    env = dict(os.environ, RAEA_OFFLINE="1", NO_COLOR="1")
+    os.makedirs(os.path.dirname(log), exist_ok=True)
+    with open(log, "w", encoding="utf-8", errors="replace") as f:
+        r = subprocess.run([precisa_raea()] + args, cwd=cwd, stdout=f, stderr=subprocess.STDOUT, env=env, timeout=timeout)
+    with open(log, encoding="utf-8", errors="replace") as f:
+        ruido = ("OpenH264", "Vello bump", "symphonia", "the rule ", "[WARN")
+        linhas = [l.rstrip() for l in f if l.strip() and not any(x in l for x in ruido)]
+    return r.returncode, linhas
+
+
+def precisa_transcricao():
+    if not os.path.isdir(os.path.join(BASE, "node_modules", "@remotion", "install-whisper-cpp")):
+        raise SystemExit("A transcrição ainda não está instalada. Rode: ep.py instalar transcricao (uma vez, ~2 min)")
 
 
 def cmd_transcrever(a):
-    precisa_base()
+    precisa_transcricao()
     pasta = a[0]
     vids = listar_videos(a[1:]) or listar_videos([claude(pasta, "midia")])
     destino = claude(pasta, "transcricao")
@@ -411,9 +561,10 @@ def cmd_transcrever(a):
             continue
         final = os.path.join(destino, os.path.basename(js))
         shutil.move(js, final)
+        m, media = alinhar(final, v)  # início de cada palavra pelo ataque da voz
         s, n, l = frases(final)
         motor = re.search(r"motor (\w+)", r.stdout)
-        print(f"ok: {os.path.basename(s)} ({n} palavras, {l} frases{', ' + motor.group(1) if motor else ''})")
+        print(f"ok: {os.path.basename(s)} ({n} palavras, {l} frases{', ' + motor.group(1) if motor else ''}; {m} inícios ajustados, média {media:.0f} ms)")
 
 
 def cmd_voz(a):
@@ -421,22 +572,10 @@ def cmd_voz(a):
     sys.exit(r.returncode)
 
 
-# ---------------- remotion ----------------
-def ligar(link, alvo):
-    if os.path.exists(link):
-        return
-    if os.name == "nt":
-        r = run(["cmd", "/c", "mklink", "/J", link, alvo])
-        if r.returncode != 0:
-            raise SystemExit("não consegui ligar o node_modules: " + r.stderr.strip())
-    else:
-        os.symlink(alvo, link, target_is_directory=True)
-
-
-def cmd_instalar(_):
+def instalar_transcricao():
     os.makedirs(os.path.join(BASE, "scripts"), exist_ok=True)
-    shutil.copy2(os.path.join(TEMPLATE, "package.json"), os.path.join(BASE, "package.json"))
-    shutil.copy2(os.path.join(TEMPLATE, "scripts", "transcrever.mjs"), os.path.join(BASE, "scripts", "transcrever.mjs"))
+    gravar_json(os.path.join(BASE, "package.json"), PACOTE_TRANSCRICAO)
+    shutil.copy2(os.path.join(PLUGIN, "scripts", "transcrever.mjs"), os.path.join(BASE, "scripts", "transcrever.mjs"))
     npm = shutil.which("npm") or shutil.which("npm.cmd")
     if not npm:
         raise SystemExit("npm não encontrado: instale o Node.js 18+ (Windows: winget install OpenJS.NodeJS.LTS)")
@@ -448,19 +587,93 @@ def cmd_instalar(_):
         with open(log, encoding="utf-8", errors="replace") as f:
             print("ERRO no npm install. Últimas linhas:\n" + "".join(f.readlines()[-10:]))
         sys.exit(1)
-    print(f"ok: Remotion instalado em {BASE} ({time.time() - t0:.0f}s)")
+    print(f"ok: transcrição instalada em {BASE} ({time.time() - t0:.0f}s)")
 
 
-def cmd_remotion(a):
-    precisa_base()
+def instalar_motor():
+    """Baixa o raea fixo (RAEA_VERSAO) do GitHub, confere o SHA-256 e extrai em ~/.raea (sem script e sem skill automática)."""
+    import hashlib, urllib.request, zipfile, tempfile
+    if os.name != "nt":
+        raise SystemExit("Fora do Windows, instale pelo site oficial: curl -fsSL https://raea.io/install | RAEA_NO_SKILLS=1 sh")
+    alvo = os.path.join(os.path.expanduser("~"), ".raea")
+    if os.path.exists(os.path.join(alvo, "bin", "raea.exe")):
+        r = run([os.path.join(alvo, "bin", "raea.exe"), "--version"])
+        print(f"já instalado: raea {r.stdout.strip()} em {alvo}")
+        return
+    nome = f"raea-{RAEA_VERSAO}-windows-x86_64.zip"
+    url = f"https://github.com/shinyobjectz/raea/releases/download/v{RAEA_VERSAO}/{nome}"
+    tmp = tempfile.mkdtemp(prefix="raea-")
+    zipp = os.path.join(tmp, nome)
+    print(f"baixando {nome} (~335 MB)...", flush=True)
+    for tentativa in range(4):
+        try:
+            urllib.request.urlretrieve(url, zipp)
+            break
+        except Exception as e:
+            if tentativa == 3:
+                raise SystemExit(f"download falhou: {e}")
+    h = hashlib.sha256()
+    with open(zipp, "rb") as f:
+        for bloco in iter(lambda: f.read(1 << 20), b""):
+            h.update(bloco)
+    if h.hexdigest() != RAEA_SHA256["windows-x86_64"]:
+        raise SystemExit("o arquivo baixado não confere (SHA-256 diferente): nada foi instalado")
+    with zipfile.ZipFile(zipp) as z:
+        z.extractall(tmp)
+    shutil.move(os.path.join(tmp, "raea"), alvo)
+    shutil.rmtree(tmp, ignore_errors=True)
+    print(f"ok: raea {RAEA_VERSAO} em {alvo} (checksum conferido)")
+
+
+def cmd_instalar(a):
+    oque = a[0] if a else "tudo"
+    if oque in ("motor", "tudo"):
+        instalar_motor()
+    if oque in ("transcricao", "tudo"):
+        instalar_transcricao()
+
+
+def cmd_doctor(_):
+    """Confere em segundos o que o Editor Pro precisa. Uma linha por item."""
+    import platform
+    exe = raea_exe()
+    rv = run([exe, "--version"]).stdout.strip() if exe else ""
+    node = run(["node", "--version"]).stdout.strip() if shutil.which("node") else ""
+    sys.path.insert(0, os.path.join(PLUGIN, "scripts"))
+    try:
+        import limpar_voz
+        df = os.path.exists(limpar_voz.DEEP_FILTER)
+    except Exception:
+        df = False
+    transc = os.path.isdir(os.path.join(BASE, "node_modules", "@remotion", "install-whisper-cpp"))
+    livre = shutil.disk_usage(os.path.expanduser("~")).free / 1e9
+    itens = [
+        (True, f"sistema: {platform.system()} {platform.release()}"),
+        (sys.version_info >= (3, 10), f"Python {sys.version.split()[0]}"),
+        (bool(node), f"Node.js {node or '(falta: winget install OpenJS.NodeJS.LTS)'}"),
+        (bool(shutil.which('ffmpeg')), "ffmpeg" + ("" if shutil.which("ffmpeg") else " (falta: winget install Gyan.FFmpeg)")),
+        (bool(rv), f"motor raea {rv or '(falta: ep.py instalar motor)'}"),
+        (transc, "transcrição Whisper local" + ("" if transc else " (falta: ep.py instalar transcricao)")),
+        (True, "limpeza de voz: " + ("DeepFilterNet" if df else "FFmpeg (DeepFilterNet não achado: funciona, qualidade um pouco menor)")),
+        (livre > 5, f"disco livre: {livre:.0f} GB"),
+        (bool(config().get("clientes")), "pasta de clientes: " + (config().get("clientes") or "não definida (ep.py config clientes=...)")),
+    ]
+    for b, txt in itens:
+        print(("ok    " if b else "FALTA ") + txt)
+
+
+def projeto(pasta):
+    return claude(pasta, "edicao")
+
+
+def cmd_projeto(a):
+    """Cria _CLAUDE/edicao/ (projeto raea) a partir do template e liga a mídia em media/midia/ (hardlink, sem gastar disco)."""
     pasta = a[0]
-    dest = claude(pasta, "remotion")
+    dest = projeto(pasta)
     novo = not os.path.isdir(os.path.join(dest, "src"))
     if novo:
-        shutil.copytree(TEMPLATE, dest, ignore=shutil.ignore_patterns("node_modules", ".work"))
-        ligar(os.path.join(dest, "node_modules"), os.path.join(BASE, "node_modules"))
+        shutil.copytree(TEMPLATE, dest, ignore=shutil.ignore_patterns(".work"))
     elif "--atualizar" in a:
-        # traz os componentes da versão atual do plugin; extras.tsx e roteiro.json do vídeo ficam
         for raiz, _, fs in os.walk(os.path.join(TEMPLATE, "src")):
             for f in fs:
                 if f == "extras.tsx":
@@ -469,8 +682,7 @@ def cmd_remotion(a):
                 os.makedirs(os.path.dirname(os.path.join(dest, rel)), exist_ok=True)
                 shutil.copy2(os.path.join(TEMPLATE, rel), os.path.join(dest, rel))
         print("componentes atualizados (extras.tsx e roteiro.json mantidos)")
-    # public/ não aceita atalho (o Remotion copia a pasta a cada render): hardlink de cada arquivo, sem gastar disco.
-    midia, pub = claude(pasta, "midia"), os.path.join(dest, "public", "midia")
+    midia, pub = claude(pasta, "midia"), os.path.join(dest, "media", "midia")
     n = 0
     if os.path.isdir(midia):
         os.makedirs(pub, exist_ok=True)
@@ -482,33 +694,151 @@ def cmd_remotion(a):
                 except OSError:
                     shutil.copy2(src, dst)
                 n += 1
-    print(f"ok: {dest} ({'criado' if novo else 'já existia'}; {n} arquivo(s) novos em public/midia/)")
+    print(f"ok: {dest} ({'criado' if novo else 'já existia'}; {n} arquivo(s) novos em media/midia/). Arquivos do vídeo vão em media/.")
 
 
 def cmd_render(a):
     pasta = a[0]
     previa = "--previa" in a
-    proj = claude(pasta, "remotion")
+    proj = projeto(pasta)
     if not os.path.isdir(proj):
-        raise SystemExit("sem projeto Remotion. Rode: ep.py remotion <pasta>")
+        raise SystemExit("sem projeto. Rode: ep.py projeto <pasta>")
+    n = preencher_tempos(pasta)
+    if n:
+        print(f"tempos calculados para {n} texto(s)")
     saida = claude(pasta, "previa.mp4" if previa else "final.mp4")  # uma só versão: sobrescreve
-    npx = shutil.which("npx") or shutil.which("npx.cmd")
-    cmd = [npx, "remotion", "render", "src/index.ts", "Video", saida, "--log=warn"] + (["--scale=0.4"] if previa else [])
-    os.makedirs(os.path.join(proj, ".work"), exist_ok=True)
-    log = os.path.join(proj, ".work", "render.log")
+    args = ["render", "edit.tsx", "-o", saida, "--manifest", os.path.join(proj, ".work", "render.json")]
+    args += ["--scale", "0.5", "--quality", "draft"] if previa else ["--quality", "high"]
     t0 = time.time()
-    with open(log, "w", encoding="utf-8", errors="replace") as f:
-        r = subprocess.run(cmd, cwd=proj, stdout=f, stderr=subprocess.STDOUT)
+    cod, linhas = raea(args, proj, os.path.join(proj, ".work", "render.log"))
     seg = time.time() - t0
-    if r.returncode != 0:
-        with open(log, encoding="utf-8", errors="replace") as f:
-            linhas = [l.rstrip() for l in f if l.strip() and not l.lstrip().startswith("at ")]
-        if any("chrome-headless-shell" in l and "ENOENT" in l for l in linhas):
-            print("ERRO: caminho longo demais para o Chrome headless. Aponte o navegador em remotion.config.ts.")
-        else:
-            print(f"ERRO no render ({seg:.0f}s). Últimas linhas:\n" + "\n".join(linhas[-12:]))
+    if cod != 0 or not os.path.exists(saida):
+        print(f"ERRO no render ({seg:.0f}s). Últimas linhas (log em .work/render.log):")
+        print("\n".join(linhas[-10:]))
         sys.exit(1)
+    # Limitador no fim (voz + SFX + trilha somados podem passar de -1 dBTP): só o áudio, o vídeo é copiado.
+    tmp = saida[:-4] + ".lim.mp4"
+    r = run(["ffmpeg", "-v", "error", "-y", "-i", saida, "-c:v", "copy", "-af", "alimiter=limit=0.84:level=disabled:attack=2:release=60",
+             "-c:a", "aac", "-b:a", "192k", tmp])
+    if r.returncode == 0 and os.path.exists(tmp):
+        os.replace(tmp, saida)
+    avisos = [l for l in linhas if l.lstrip().startswith(("warn", "error", "NOTE", "REFUSED"))]
     print(f"ok: {saida} ({os.path.getsize(saida) / 1e6:.1f} MB, {duracao(saida):.2f}s) em {seg:.0f}s")
+    for l in avisos[:6]:
+        print("  " + l.strip()[:200])
+
+
+def cmd_checar(a):
+    """raea check no vídeo pronto: volume, pico, trilha sob a voz, congelado, flash, área segura, leitura, legenda fora da palavra."""
+    pasta = a[0]
+    proj = projeto(pasta)
+    video = claude(pasta, "final.mp4" if "--final" in a else "previa.mp4")
+    if not os.path.exists(video):
+        raise SystemExit(f"sem vídeo: {video}")
+    args = ["check", video, "--platform", config().get("plataforma", "instagram"), "-o", os.path.join(proj, ".work", "check.json")]
+    man = os.path.join(proj, ".work", "render.json")
+    if os.path.exists(man):
+        args += ["--manifest", man]
+    pal = os.path.join(proj, "words.json")
+    if os.path.exists(pal):
+        args += ["--words", pal]
+    cod, linhas = raea(args, proj, os.path.join(proj, ".work", "check.log"))
+    ruins = [l for l in linhas if l.lstrip().startswith(("error", "warn"))]
+    # Karaokê mostra a frase apagada antes de cada palavra acender: "cue" adiantado nessas palavras é o estilo, não erro.
+    rot = ler_json(os.path.join(proj, "roteiro.json"), {}) or {}
+    karaoke = {_norm(p) for t in rot.get("textos") or [] if t.get("estilo") == "karaoke" for p in t["texto"].replace("|", " ").split()}
+    esperados = [l for l in ruins if " cue " in f" {l} " and any(f"“{w}”" in l or _norm(re.sub(r'.*?“([^”]+)”.*', r'\1', l)) == w for w in karaoke)]
+    ruins = [l for l in ruins if l not in esperados]
+    if esperados:
+        print(f"  ({len(esperados)} aviso(s) de legenda adiantada no karaokê: esperado, a frase aparece apagada antes)")
+    fim = next((l for l in reversed(linhas) if l.startswith("raea check:")), "")
+    if esperados and not ruins:
+        fim = "raea check: ok (o único aviso era o karaokê)"
+    print(fim or f"raea check terminou com código {cod}")
+    for l in ruins[:10]:
+        print("  " + l.strip()[:220])
+    if not ruins:
+        print("  tudo ok nos itens medidos")
+
+
+# ---------------- tempos das legendas (o Claude não escreve tempos) ----------------
+def _norm(p):
+    import unicodedata
+    p = unicodedata.normalize("NFD", p.lower())
+    return re.sub(r"[^a-z0-9]", "", "".join(c for c in p if unicodedata.category(c) != "Mn"))
+
+
+def palavras_da_base(pasta):
+    """Palavras da base (tempo final do vídeo): _CLAUDE/transcricao/base.json, no formato do Whisper/Remotion."""
+    arq = claude(pasta, "transcricao", "base.json")
+    if not os.path.exists(arq):
+        return []
+    return [(ini, fim, txt) for ini, fim, txt in palavras(ler_json(arq, []))]
+
+
+def preencher_tempos(pasta):
+    """Para cada texto sem `tempos`: acha a frase na transcrição da base (a partir de `perto`, se dado, ou da frase anterior)
+    e preenche inicio, tempos de cada palavra e fim (segura ~1 s depois da última palavra, sem passar do próximo texto).
+    Também grava words.json no projeto para o raea check medir legenda fora da palavra."""
+    proj = projeto(pasta)
+    arq = os.path.join(proj, "roteiro.json")
+    rot = ler_json(arq)
+    ws = palavras_da_base(pasta)
+    if not rot or not ws:
+        return 0
+    gravar_json(os.path.join(proj, "words.json"), [{"text": t, "start_ms": round(i * 1000), "end_ms": round(f * 1000)} for i, f, t in ws])
+    norm = [_norm(t) for _, _, t in ws]
+    textos = rot.get("textos") or []
+    feitos, cursor = 0, 0
+    for t in textos:
+        alvo = [_norm(p) for p in t["texto"].replace("|", " ").split() if _norm(p)]
+        if t.get("tempos") and len(t["tempos"]) == len(alvo):
+            cursor = max(cursor, next((k for k, (i, _, _) in enumerate(ws) if i >= t["tempos"][-1]), cursor))
+            continue
+        ini_busca = cursor
+        if t.get("perto") is not None:
+            ini_busca = next((k for k, (i, _, _) in enumerate(ws) if i >= t["perto"] - 1.0), 0)
+        achou = None
+        for k in range(ini_busca, len(ws) - len(alvo) + 1):
+            if norm[k:k + len(alvo)] == alvo:
+                achou = k
+                break
+        if achou is None and len(alvo) >= 3:  # tolera palavras trocadas pela transcrição ("num" × "no")
+            minimo = max(2, -(-len(alvo) * 6 // 10))
+            for k in range(ini_busca, len(ws) - len(alvo) + 1):
+                if norm[k] == alvo[0] and sum(a == b for a, b in zip(norm[k:k + len(alvo)], alvo)) >= minimo:
+                    achou = k
+                    break
+        if achou is None:  # frase resumida (não literal): ancora na 1ª palavra que bate
+            k0 = next((k for k in range(ini_busca, len(ws)) if norm[k] == alvo[0]), None)
+            if k0 is None:
+                print(f"  aviso: \"{t['texto']}\" não foi achada na fala; ponha \"perto\": <segundo> ou ajuste o texto")
+                continue
+            passo = max(0.12, (ws[min(len(ws) - 1, k0 + len(alvo))][0] - ws[k0][0]) / max(1, len(alvo)))
+            tempos = [round(ws[k0][0] + i * passo, 2) for i in range(len(alvo))]
+            ultimo = min(len(ws) - 1, k0 + len(alvo) - 1)
+        else:
+            tempos = [round(ws[k][0], 2) for k in range(achou, achou + len(alvo))]
+            ultimo = achou + len(alvo) - 1
+            k0 = achou
+        t["tempos"] = tempos
+        t["inicio"] = round(tempos[0], 2)
+        t["fim"] = round(max(ws[ultimo][1] + 1.0, tempos[0] + 0.8), 2)
+        cursor = ultimo + 1
+        feitos += 1
+    # sem colisão: cada texto termina antes do próximo começar
+    ordem = sorted(textos, key=lambda x: x["inicio"])
+    for x, y in zip(ordem, ordem[1:]):
+        if x["fim"] > y["inicio"] - 0.05:
+            x["fim"] = round(max(x["inicio"] + 0.5, y["inicio"] - 0.05), 2)
+    if feitos:
+        gravar_json(arq, rot)
+    return feitos
+
+
+def cmd_tempos(a):
+    n = preencher_tempos(a[0])
+    print(f"ok: tempos calculados para {n} texto(s)")
 
 
 # ---------------- som ----------------
@@ -594,7 +924,58 @@ def cmd_sfx(a):
             total += 1
             print(f"{os.path.join(p, s['arquivo'])} | {s['dur']}s | pico em {s['pico']}s | {s['db']} dB")
     if cat or busca:
-        print(f"({total} sons) No roteiro: copie para public/sfx/ e use \"pico\" para alinhar o pico no tempo da ação.")
+        print(f"({total} sons) No roteiro: copie para media/sfx/ do projeto e use \"pico\" para alinhar o pico no tempo da ação.")
+
+
+# ---------------- revisão de diretor de arte ----------------
+def cmd_revisar(a):
+    """Tiras de 6 quadros seguidos (-4, -2, 0, +2, +4, +8) em cada momento de movimento: mostra o tempo, não só o quadro."""
+    pasta = a[0]
+    video = claude(pasta, "final.mp4" if "--final" in a else "previa.mp4")
+    rot = ler_json(os.path.join(projeto(pasta), "roteiro.json"), {})
+    if not os.path.exists(video):
+        raise SystemExit(f"sem vídeo: {video}")
+    fps = rot.get("fps", 30)
+    momentos = []
+    for t in rot.get("textos") or []:
+        momentos.append((t["inicio"], f"texto entra: {t['texto'][:28]}"))
+    for tr in rot.get("transicoes") or []:
+        momentos.append((tr["t"], f"transição {tr['tipo']}"))
+    for p in rot.get("pecas") or []:
+        momentos.append((p["inicio"], f"peça {p['nome']}"))
+    if rot.get("fecho"):
+        momentos.append((rot["fecho"]["inicio"], f"fecho {rot['fecho']['tipo']}"))
+    momentos = sorted(momentos)
+    vistos, sel = [], []
+    for t, nome in momentos:  # um por janela de 0,5 s, até 12
+        if all(abs(t - v) > 0.5 for v in vistos):
+            vistos.append(t)
+            sel.append((t, nome))
+    sel = sel[:12]
+    pasta_out = claude(pasta, "folhas")
+    os.makedirs(pasta_out, exist_ok=True)
+    tiras = []
+    for i, (t, _) in enumerate(sel):
+        f0 = max(4, round(t * fps))  # no começo do vídeo, desloca para ter 4 quadros antes
+        quadros = [max(0, f0 + d) for d in (-4, -2, 0, 2, 4, 8)]
+        expr = "+".join(f"eq(n\\,{q})" for q in quadros)
+        out = os.path.join(pasta_out, f".tira{i:02d}.jpg")
+        r = run(["ffmpeg", "-v", "error", "-y", "-i", video, "-vf", f"select='{expr}',scale=150:-2,tile=6x1:padding=4:color=black",
+                 "-frames:v", "1", "-fps_mode", "passthrough", out])
+        if r.returncode == 0 and os.path.exists(out):
+            tiras.append(out)
+    if not tiras:
+        raise SystemExit("não consegui montar as tiras")
+    saida = os.path.join(pasta_out, "revisao.jpg")
+    entradas = sum([["-i", x] for x in tiras], [])
+    filtro = f"{''.join(f'[{i}]' for i in range(len(tiras)))}vstack=inputs={len(tiras)}" if len(tiras) > 1 else "null"
+    run(["ffmpeg", "-v", "error", "-y"] + entradas + ["-filter_complex", filtro, "-q:v", "4", saida])
+    for x in tiras:
+        os.remove(x)
+    print(saida)
+    for i, (t, nome) in enumerate(sel[:len(tiras)]):
+        print(f"  linha {i + 1}: {t:.2f}s {nome}")
+    print("Cada linha: 4 e 2 quadros antes, o quadro do momento, 2, 4 e 8 depois. Avalie com ../editar/revisao.md.")
 
 
 # ---------------- histórico do cliente (para variar entre vídeos) ----------------
@@ -627,7 +1008,7 @@ def cmd_historico(a):
     vids = historico_cliente(pasta)
     if "--gravar" in a:
         d = estado(pasta)
-        rot = ler_json(claude(pasta, "remotion", "public", "roteiro.json"), {})
+        rot = ler_json(os.path.join(projeto(pasta), "roteiro.json"), {})
         reg = {"data": time.strftime("%Y-%m-%d"), "tema": d.get("tema"), "modelo": d.get("modelo"),
                "direcao": (d.get("plano") or {}).get("direcao"), "assinatura": assinatura(rot)}
         vids = [v for v in vids if v.get("tema") != reg["tema"]] + [reg]
@@ -647,19 +1028,19 @@ def cmd_historico(a):
 # ---------------- conferência ----------------
 def cmd_conferir(a):
     pasta = a[0]
-    proj = claude(pasta, "remotion")
-    rot = ler_json(os.path.join(proj, "public", "roteiro.json"))
+    proj = projeto(pasta)
+    rot = ler_json(os.path.join(proj, "roteiro.json"))
     if rot is None:
         raise SystemExit("sem roteiro.json")
     fps, W, H = rot["fps"], rot["largura"], rot["altura"]
     total = rot["duracao"]
     q = lambda s: round(s * fps)
     prob, info = [], []
-    pub = os.path.join(proj, "public")
+    pub = os.path.join(proj, "media")
 
     def existe(arq, oque):
         if arq and not os.path.exists(os.path.join(pub, arq)):
-            prob.append(f"{oque}: arquivo não existe em public/ ({arq})")
+            prob.append(f"{oque}: arquivo não existe em media/ ({arq})")
 
     # duração x base
     if rot.get("base"):
@@ -769,8 +1150,9 @@ CMDS = {
     "onde": cmd_onde, "config": cmd_config, "novo": cmd_novo, "status": cmd_status, "ver": cmd_ver, "set": cmd_set,
     "etapa": cmd_etapa, "pendencia": cmd_pendencia, "resolver": cmd_resolver, "inventario": cmd_inventario,
     "converter": cmd_converter, "folha": cmd_folha, "cor": cmd_cor, "transcrever": cmd_transcrever, "frases": cmd_frases,
-    "voz": cmd_voz, "instalar": cmd_instalar, "remotion": cmd_remotion, "render": cmd_render, "medir": cmd_medir,
+    "voz": cmd_voz, "instalar": cmd_instalar, "projeto": cmd_projeto, "doctor": cmd_doctor, "checar": cmd_checar, "tempos": cmd_tempos, "render": cmd_render, "medir": cmd_medir,
     "sfx": cmd_sfx, "sfx-indice": cmd_sfx_indice, "conferir": cmd_conferir, "historico": cmd_historico,
+    "revisar": cmd_revisar, "alinhar": cmd_alinhar,
 }
 
 if __name__ == "__main__":

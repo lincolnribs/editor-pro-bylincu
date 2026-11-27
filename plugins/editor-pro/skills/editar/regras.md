@@ -3,7 +3,7 @@
 Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro/regras-locais.md` se existir (regras do usuário; valem por cima destas).
 
 ## 0. Onde fica cada coisa
-- **Plugin** (`EP` = pasta dois níveis acima desta skill): `scripts/ep.py` (todos os comandos), `template/` (Remotion), `sfx/` (biblioteca), `skills/editar/` (estas regras, `motion.md`, `complementos.md`, `formatos/`).
+- **Plugin** (`EP` = pasta dois níveis acima desta skill): `scripts/ep.py` (todos os comandos), `template/` (projeto do motor raea), `sfx/` (biblioteca), `skills/editar/` (estas regras, `motion.md`, `complementos.md`, `formatos/`).
 - **Config local** `~/.editor-pro/config.json` (`ep.py config`): `clientes` = pasta com uma subpasta por cliente. Nada de cliente vai para o plugin.
 - **Cliente:** `<clientes>/<Cliente>/` com `perfil-edicao.md` (gosto: cores, fontes, ritmo, trilha, logo), kit (`kit-codigo/`, logo, fontes) e `Finalizados/`. Identidade de um cliente nunca vai para outro.
 - **Vídeo:** `<clientes>/<Cliente>/videos/AAAA-MM-DD_tema/` com `_CLAUDE/` dentro (tudo o que o Claude gera). Brutos ficam onde estão: só se aponta para eles. Sem pasta de clientes: `_CLAUDE/` ao lado dos brutos.
@@ -15,9 +15,10 @@ Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro
 - **Uma só versão:** alterações sobrescrevem a prévia (`_CLAUDE/previa.mp4`) e a entrega (`Finalizados/AAAA-MM-DD_tema.mp4`). Nada de `_v02`.
 - Instalar programa ou baixar arquivo: dizer o quê e esperar o "sim".
 
-## 2. Fluxo e estado
+## 2. Fluxo, estado e memória
 - Etapas: preparar → plano → montar → som → entregar. Uma por conversa; nunca encadear sozinho.
 - Estado em `_CLAUDE/projeto.json`, lido e mudado só pelo `ep.py` (`status`, `ver`, `set`, `etapa`, `pendencia`, `resolver`).
+- **Memória travada: `_CLAUDE/decisoes.md`** (no máximo 25 linhas): o que já foi decidido e não pode ser desfeito (áreas proibidas para texto, estilo aprovado, trilha escolhida, pedidos do usuário que valem até o fim). Toda etapa lê primeiro e nunca desfaz nada listado ali. É isso que permite o `/clear` entre etapas sem perder nada.
 - Cada etapa parte da anterior aprovada. Se algo aprovado mudar depois, avisar o que precisa refazer.
 - **Ponto salvo:** revisões aplicadas + arquivo gerado. Aí `ep.py etapa <pasta> <etapa>=concluido`, dizer quantos aprendizados ficaram anotados e sugerir `/clear` + `/editar`. Nunca sugerir `/clear` com pedido não aplicado nem anotado (`ep.py pendencia`).
 
@@ -27,7 +28,8 @@ Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro
 - Imagens: no máximo uma folha por take e uma da prévia. Quadro isolado só com dúvida real.
 - Render e tarefas longas em segundo plano.
 - Modelo sugerido: Sonnet em preparar, som e entregar; Opus em plano e montar (trocar logo depois do `/clear`).
-- Documentação do Remotion só para peça sob medida, e só se o `ctx7` existir: `ctx7 docs /remotion-dev/remotion "<pergunta>"`.
+- Motor: raea (`~/.raea`), na GPU. O `ep.py` chama o raea e devolve poucas linhas; o log fica em `.work/`. Peça sob medida difícil: o manual do raea está em `~/.raea/share/raea/docs` (ler só a página que precisa).
+- **Subagente:** inspeção de imagens, limpeza de voz, render e testes de comando vão para um subagente quando a ferramenta tiver (volta só um resumo de 3–5 linhas + caminhos). Sem subagente, rode direto e nunca cole log longo no chat.
 
 ## 4. Gosto separado do ofício
 - Ofício (vale para qualquer vídeo) está nas etapas e em `motion.md`. Gosto do cliente está no `perfil-edicao.md`: quando ele diz outra coisa, vale o perfil.

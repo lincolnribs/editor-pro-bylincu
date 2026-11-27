@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme/selos.png" alt="V3.0 · Plugin do Claude Code · Feito com Remotion · Em português · Ferramentas grátis" width="100%">
+  <img src="assets/readme/selos.png" alt="Beta · Plugin do Claude Code · Motor raea na GPU · Em português · Ferramentas grátis" width="100%">
 </p>
 
 ---
@@ -51,7 +51,7 @@ Extras do plugin **Editor Pro Motion**. Só entram quando o vídeo pede: [motion
 <details>
 <summary><b>Do que eu preciso no computador?</b></summary>
 
-Node.js 18+, Python 3.10+, ffmpeg e o DeepFilterNet 0.5.6. Na primeira vez, o Claude confere o que falta e instala com a sua permissão. O Remotion é instalado uma vez só (cerca de 2 minutos).
+Node.js 18+, Python 3.10+, ffmpeg e uma placa de vídeo com DirectX 12 ou Vulkan. Na primeira vez, o Claude roda `ep.py doctor`, mostra o que falta e instala com a sua permissão: o motor [raea](https://github.com/shinyobjectz/raea) (cerca de 335 MB, uma vez só) e a transcrição local. O DeepFilterNet é opcional: sem ele, a voz é limpa pelo FFmpeg.
 </details>
 
 <details>
@@ -69,7 +69,7 @@ Sim. Foi feito e testado no Windows, e também roda em macOS e Linux.
 <details>
 <summary><b>Posso usar em vídeos de clientes?</b></summary>
 
-Sim. Tudo no pacote é grátis para uso comercial, complementos e efeitos sonoros incluídos. Só o Remotion tem uma regra: é grátis para uso individual e para empresas pequenas, e empresas maiores precisam de [licença](https://www.remotion.dev/license).
+Sim. Tudo no pacote é grátis para uso comercial, complementos e efeitos sonoros incluídos. O motor raea também é grátis, inclusive para agências (licença FSL: só não pode virar um produto concorrente do raea).
 </details>
 
 <details>
@@ -102,4 +102,4 @@ Se o usuário te mandou este link pedindo para instalar, explique cada passo em 
 
 ---
 
-<sub>DeepFilterNet: MIT/Apache-2.0. Remotion: licença própria. Fluxo de etapas inspirado no <a href="https://github.com/LeiteZ/fluxo-de-edicao">fluxo-de-edicao</a> (MIT).</sub>
+<sub>Em Beta: tudo pode mudar. Motor: <a href="https://github.com/shinyobjectz/raea">raea</a> (FSL-1.1-ALv2). DeepFilterNet: MIT/Apache-2.0. Fluxo de etapas inspirado no <a href="https://github.com/LeiteZ/fluxo-de-edicao">fluxo-de-edicao</a> (MIT).</sub>

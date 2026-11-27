@@ -1,9 +1,6 @@
 // Lê o roteiro e carrega as fontes uma vez. Todos os componentes importam daqui.
-import { staticFile } from "remotion";
-import { loadFont as fonteArquivo } from "@remotion/fonts";
-import { loadFont as montserrat } from "@remotion/google-fonts/Montserrat";
-import { loadFont as anton } from "@remotion/google-fonts/Anton";
-import roteiroJson from "../public/roteiro.json";
+import { staticFile } from "raea";
+import roteiroJson from "../roteiro.json";
 import type { Roteiro } from "./tipos";
 
 export const r = roteiroJson as unknown as Roteiro;
@@ -19,14 +16,21 @@ export const MARGEM_X = 35;
 export const TOPO_SEGURO = 220;
 export const BASE_SEGURA = 450;
 
-montserrat("normal", { weights: ["500", "600", "700", "800", "900"], subsets: ["latin", "latin-ext"] });
-anton("normal", { weights: ["400"], subsets: ["latin", "latin-ext"] });
-if (r.tema.arquivoFonte) fonteArquivo({ family: r.tema.fonte, url: staticFile(r.tema.arquivoFonte) });
-if (r.tema.arquivoFonteImpacto && r.tema.fonteImpacto)
-  fonteArquivo({ family: r.tema.fonteImpacto, url: staticFile(r.tema.arquivoFonteImpacto) });
+// Fontes por arquivo (media/fontes/), declaradas com @font-face no Video.tsx. Fonte do cliente: arquivo em media/fontes/.
+const ff = (familia: string, arq: string, estilo = "normal", peso = "100 900") =>
+  `@font-face{font-family:'${familia}';src:url(${staticFile(arq)});font-style:${estilo};font-weight:${peso};}`;
+export const CSS_FONTES = [
+  ff("Montserrat", "fontes/Montserrat.ttf"),
+  ff("Anton", "fontes/Anton-Regular.ttf", "normal", "400"),
+  ff("Instrument Serif", "fontes/InstrumentSerif-Italic.ttf", "italic", "400"),
+  r.tema.arquivoFonte ? ff(r.tema.fonte, r.tema.arquivoFonte) : "",
+  r.tema.arquivoFonteImpacto && r.tema.fonteImpacto ? ff(r.tema.fonteImpacto, r.tema.arquivoFonteImpacto) : "",
+  r.tema.arquivoFonteSerifa && r.tema.fonteSerifa ? ff(r.tema.fonteSerifa, r.tema.arquivoFonteSerifa, "italic") : "",
+].join("");
 
 export const FAMILIA = `'${r.tema.fonte}', Montserrat, sans-serif`;
 export const IMPACTO = `'${r.tema.fonteImpacto ?? "Anton"}', Anton, Impact, sans-serif`;
+export const SERIFA = `'${r.tema.fonteSerifa ?? "Instrument Serif"}', 'Instrument Serif', Georgia, serif`;
 
 export const q = (s: number) => Math.round(s * r.fps);
 

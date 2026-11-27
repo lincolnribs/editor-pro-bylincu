@@ -3,8 +3,8 @@
 // Estilos: linha · karaoke · palavra · hierarquia · marca-texto · caixa · lateral
 // Entradas: blur · pop · deslizar · onda · maquina · letras
 import React, { useLayoutEffect, useRef, useState } from "react";
-import { AbsoluteFill, continueRender, delayRender, interpolate, useCurrentFrame } from "remotion";
-import { FAMILIA, IMPACTO, MARGEM_X, faixaSegura, q, r } from "../dados";
+import { AbsoluteFill, continueRender, delayRender, interpolate, useCurrentFrame } from "raea";
+import { FAMILIA, IMPACTO, MARGEM_X, SERIFA, faixaSegura, q, r } from "../dados";
 import { FORMA, POP_LEVE, SAIDA, SOFT, U, blurIn, blurOut, clamp, corrente, fadeIn, fadeOut, respira } from "../motion";
 import type { EntradaTexto, Texto as TTexto } from "../tipos";
 
@@ -55,7 +55,7 @@ function animar(entrada: EntradaTexto, lf: number, n: number, lado: number): Vis
 
 type Pal = { p: string; linha: number; destaque: boolean };
 
-export const Texto: React.FC<TTexto & { dur: number }> = (t) => {
+export const Texto: React.FC<TTexto & { dur: number; deslocar?: number }> = (t) => {
   const frame = useCurrentFrame();
   const entrada = t.entrada ?? "blur";
   const estilo = t.estilo ?? "linha";
@@ -75,12 +75,17 @@ export const Texto: React.FC<TTexto & { dur: number }> = (t) => {
   // Fonte de cada palavra (a hierarquia mistura tamanhos e famílias).
   const fonteDe = (w: Pal): React.CSSProperties => {
     const caixaAlta = t.caixaAlta ? "uppercase" : "none";
+    const serifa = (tam: number): React.CSSProperties => ({ fontFamily: SERIFA, fontStyle: "italic", fontWeight: 400, fontSize: Math.round(tam * 1.12), letterSpacing: "-0.01em", textTransform: "none" });
     if (estilo === "hierarquia") {
+      if (w.destaque && t.destaqueFonte === "serifa") return serifa(base * 1.9);
       return w.destaque
         ? { fontFamily: IMPACTO, fontWeight: 400, fontSize: Math.round(base * 1.9), letterSpacing: "0.005em", textTransform: "uppercase" }
         : { fontFamily: FAMILIA, fontWeight: 600, fontSize: Math.round(base * 0.62), letterSpacing: "-0.01em", textTransform: caixaAlta };
     }
     const tam = estilo === "palavra" ? Math.round(base * 1.45) : base;
+    if (w.destaque && t.destaqueFonte === "serifa") return serifa(tam);
+    if (w.destaque && t.destaqueFonte === "impacto")
+      return { fontFamily: IMPACTO, fontWeight: 400, fontSize: Math.round(tam * 1.08), letterSpacing: "0.01em", textTransform: "uppercase" };
     return {
       fontFamily: impacto ? IMPACTO : FAMILIA,
       fontWeight: impacto ? 400 : legenda ? 700 : r.tema.peso,
@@ -103,6 +108,8 @@ export const Texto: React.FC<TTexto & { dur: number }> = (t) => {
     });
   }
   if (entrada === "deslizar") inicioDe = palavras.map((w) => inicioDe[palavras.findIndex((o) => o.linha === w.linha)]);
+  // A sequência começa `adiantar` quadros antes do texto; no começo do vídeo (sem espaço para adiantar) o deslocamento compensa.
+  inicioDe = inicioDe.map((f) => Math.max(0, f + (t.deslocar ?? 0)));
   const fimEntrada = Math.max(...inicioDe) + U * 2;
 
   // Medir a largura de cada palavra (com a fonte dela) depois que as fontes carregam.
@@ -168,7 +175,7 @@ export const Texto: React.FC<TTexto & { dur: number }> = (t) => {
       const s = corrente(lf - U / 2, FORMA);
       barra = (
         <span style={{ position: "absolute", left: "-0.12em", right: "-0.12em", top: "14%", bottom: "4%", background: r.tema.destaque,
-          borderRadius: "0.12em", transform: `scaleX(${lf < U / 2 ? 0 : s})`, transformOrigin: "left center", zIndex: 0 }} />
+          borderRadius: "0.12em", transform: `scaleX(${lf < U / 2 ? 0 : s})`, transformOrigin: "left center" }} />
       );
       cor = lf >= U ? corSobre : r.tema.destaque;
     }
@@ -176,7 +183,7 @@ export const Texto: React.FC<TTexto & { dur: number }> = (t) => {
       <div key={k} style={{ width: largura, flex: "none", boxSizing: "border-box", paddingLeft: pi > 0 ? gap : 0 }}>
         <span style={{ position: "relative", display: "inline-block", whiteSpace: "pre", ...fonteDe(pal), lineHeight: lh, color: cor, ...css }}>
           {barra}
-          <span style={{ position: "relative", zIndex: 1 }}>
+          <span style={{ position: "relative" }}>
             {letra && !(lf < 0)
               ? pal.p.split("").map((c, i) => <span key={i} style={{ display: "inline-block", ...letra!(i) }}>{c}</span>)
               : pal.p}

@@ -1,7 +1,7 @@
 // Fechos com nome fixo: logo (vídeo desfoca, logo aparece) · fade (escurece suave) · cartela (fundo sólido + texto + logo).
 // Final sem microcorte: o último quadro já está parado ou escuro.
 import React from "react";
-import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from "raea";
 import { IMPACTO, r } from "../dados";
 import { EASE, POP_LEVE, U, blurIn, cascata, clamp, corrente, duracaoCorrente, fadeIn, respira } from "../motion";
 import type { Fecho as TFecho } from "../tipos";
@@ -26,7 +26,7 @@ export const Fecho: React.FC<{ fecho: TFecho; dur: number }> = ({ fecho, dur }) 
     const b = interpolate(f, [0, U * 2], [0, 22], { ...clamp, easing: EASE });
     return (
       <AbsoluteFill>
-        <AbsoluteFill style={{ backdropFilter: `blur(${b}px)`, WebkitBackdropFilter: `blur(${b}px)` }} />
+        <AbsoluteFill style={{ backdropFilter: `blur(${b}px)` }} />
         <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
           {fecho.logo ? <Logo arquivo={fecho.logo} largura={fecho.largura} ini={U / 2} /> : null}
         </AbsoluteFill>

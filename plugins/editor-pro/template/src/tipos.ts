@@ -11,6 +11,8 @@ export type Tema = {
   arquivoFonte?: string; // fonte do cliente em public/fontes/
   fonteImpacto?: string; // condensada para impacto (padrão: Anton)
   arquivoFonteImpacto?: string;
+  fonteSerifa?: string; // serifa itálica para destaque (padrão: Instrument Serif)
+  arquivoFonteSerifa?: string;
   peso: number;
   cor: string;
   destaque: string; // cor das palavras de destaque
@@ -20,6 +22,14 @@ export type Tema = {
   tamanho: number; // px do lettering
   tamanhoLegenda: number;
   sombra?: boolean; // sombra suave no bloco (só quando o fundo é vídeo e o texto não lê)
+  adiantar?: number; // quadros que o texto entra antes da fala (padrão 3 = 100 ms): chega legível no tempo da palavra
+};
+
+// Acabamento de imagem (escolhido pela direção, não ligado sempre)
+export type Acabamento = {
+  grao?: number; // 0–0,12: ruído de filme animado
+  vinheta?: number; // 0–0,4: bordas escurecidas (neutro; respeitar a regra "sem gradiente colorido sobre o vídeo")
+  deriva?: boolean; // micro zoom/pan contínuo da câmera, o plano nunca fica parado
 };
 
 // Estilo = o desenho do texto na tela (a entrada é a animação). Combinar os dois dá a variação.
@@ -37,6 +47,7 @@ export type Texto = {
   estilo?: EstiloTexto; // escolhido no plano, com motivo (não existe padrão "certo")
   entrada?: EntradaTexto;
   lado?: "esquerda" | "direita"; // estilo lateral
+  destaqueFonte?: "serifa" | "impacto"; // palavra-chave em serifa itálica (elegante) ou na condensada (força)
   caixaAlta?: boolean;
   tipo?: "lettering" | "legenda" | "impacto"; // impacto = fonte condensada, maior
   destaque?: string[];
@@ -74,6 +85,7 @@ export type Roteiro = {
   textos?: Texto[];
   pecas?: Peca[];
   fecho?: Fecho | null;
+  acabamento?: Acabamento;
   sfx?: { t: number; arquivo: string; volume?: number; pico?: number }[]; // pico: segundos até o pico do som (alinha o pico em t)
   trilha?: { arquivo: string; volume: number; desde?: number } | null;
 };

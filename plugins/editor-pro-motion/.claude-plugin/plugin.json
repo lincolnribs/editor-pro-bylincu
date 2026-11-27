@@ -1,6 +1,6 @@
 {
   "name": "editor-pro-motion",
-  "version": "3.0.0",
+  "version": "0.1.0-beta",
   "description": "Complementos opcionais do Editor Pro: motion contínuo (motionmaxxing), logo animado (pixel2motion) e efeitos sobre a pessoa (effects). Só entram quando o Editor Pro chama.",
   "author": { "name": "Lincu" },
   "homepage": "https://github.com/lincolnribs/editor-pro-bylincu",

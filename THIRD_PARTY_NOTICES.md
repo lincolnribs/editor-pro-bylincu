@@ -20,6 +20,11 @@ As regras de ofício das etapas (uma etapa por vez, estado em arquivo, caderno d
 
 ## Ferramentas usadas (não incluídas no pacote)
 
-- [Remotion](https://www.remotion.dev) — licença própria: grátis para uso individual e empresas pequenas; empresas maiores precisam de [licença](https://www.remotion.dev/license).
+- [raea](https://github.com/shinyobjectz/raea) (motor de renderização, instalado à parte em `~/.raea`, versão fixa 0.1.11) — FSL-1.1-ALv2: uso livre, exceto produto concorrente; cada versão vira Apache-2.0 dois anos depois.
+- Transcrição local: pacotes `@remotion/install-whisper-cpp` e `@remotion/whisper-webgpu` (instalados à parte em `~/.editor-pro/base`) e [whisper.cpp](https://github.com/ggerganov/whisper.cpp) (MIT).
+
+## Fontes incluídas no template (`plugins/editor-pro/template/media/fontes/`)
+
+Montserrat, Anton e Instrument Serif, sob a SIL Open Font License 1.1 (licenças ao lado de cada arquivo).
 - [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet) — MIT/Apache-2.0.
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — MIT.

@@ -1,10 +1,11 @@
-// Peças com nome fixo, escolhidas no plano: Pilula · Card · Contador · Lista.
+// Peças com nome fixo, escolhidas no plano: Pilula · Card · Contador · Lista · Fundo (tela de motion viva).
 // Todas: passam do ponto e assentam, fade na entrada e na saída, respiram paradas, saem acelerando.
 // Posição em px (centro do elemento). Respeitar rosto livre e margens (o `ep.py conferir` avisa).
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, useCurrentFrame } from "raea";
 import { FAMILIA, IMPACTO, r } from "../dados";
 import { EASE, FORMA, POP, POP_LEVE, SAIDA, U, blurIn, cascata, clamp, corrente, duracaoCorrente, fadeIn, fadeOut, respira } from "../motion";
+import { Fundo } from "./Acabamento";
 
 type Base = { dur: number; x?: number; y?: number };
 
@@ -106,4 +107,4 @@ export const Lista: React.FC<Base & { itens: string[]; tempos?: number[]; cor?: 
   );
 };
 
-export const PECAS: Record<string, React.FC<any>> = { Pilula, Card, Contador, Lista };
+export const PECAS: Record<string, React.FC<any>> = { Pilula, Card, Contador, Lista, Fundo };

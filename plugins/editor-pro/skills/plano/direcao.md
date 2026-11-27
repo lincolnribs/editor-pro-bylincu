@@ -26,6 +26,11 @@ Misture e renomeie; não use igual em vídeos seguidos do mesmo cliente.
 - **Editorial:** `lateral` com o rosto de lado, tipografia grande e respiro, poucas trocas, `luz`. Sofisticado, premium.
 - **Prova:** `Contador`, `Card` e `Pilula` sustentando números e benefícios, `zoom` no número-chave. Comercial, venda.
 
+## Tipografia que quebra o template
+- Misture famílias com intenção: frase na sans, **palavra-chave em serifa itálica** (`destaqueFonte: "serifa"`) para elegância, emoção, sofisticação; na **condensada** (`"impacto"`) para força, número, urgência.
+- Mude a escala de propósito: uma palavra 2× maior diz mais que uma frase inteira em negrito.
+- Mude o lugar: topo, centro, lateral, embaixo; o olho acompanha o que se move.
+
 ## Como saber se ficou genérico
 - Se trocar a transcrição por outra, o plano continua servindo? Então está genérico.
 - Todos os textos têm o mesmo tamanho, lugar e entrada? Genérico.

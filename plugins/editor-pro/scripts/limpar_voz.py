@@ -43,6 +43,7 @@ def _achar_deep_filter():
 
 
 DEEP_FILTER = _achar_deep_filter()
+AVISO_FFMPEG = False  # vira True se algum arquivo caiu na limpeza por FFmpeg
 
 
 def run(cmd, **kw):
@@ -71,8 +72,16 @@ def limpar(path, tmp, cache):
     os.makedirs(out_dir, exist_ok=True)
     raw = os.path.join(raw_dir, nome + ".wav")
     run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vn", "-ac", "1", "-ar", "48000", "-c:a", "pcm_s16le", raw])
-    run([DEEP_FILTER, "-D", "--pf", "-o", out_dir, raw])
     clean = os.path.join(out_dir, nome + ".wav")
+    # Um único caminho, sem tentar de novo nem reinstalar: DeepFilterNet se existir e funcionar; senão, FFmpeg.
+    ok = False
+    if os.path.exists(DEEP_FILTER):
+        r = subprocess.run([DEEP_FILTER, "-D", "--pf", "-o", out_dir, raw], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        ok = r.returncode == 0 and os.path.exists(clean)
+    if not ok:
+        global AVISO_FFMPEG
+        AVISO_FFMPEG = True
+        run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", "highpass=f=80,lowpass=f=12000,afftdn=nr=12:nf=-40:tn=1", "-c:a", "pcm_s16le", clean])
     cache[path] = clean
     return clean
 
@@ -133,7 +142,7 @@ def main():
     args = ap.parse_args()
 
     if not os.path.exists(DEEP_FILTER):
-        raise SystemExit(f"DeepFilterNet não encontrado em {DEEP_FILTER} (defina DEEP_FILTER)")
+        print("aviso: DeepFilterNet não encontrado; limpando a voz com FFmpeg (funciona, qualidade um pouco menor)")
 
     if args.lista:
         trechos = []
