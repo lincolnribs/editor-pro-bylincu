@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .quadro { width: 1280px; height: 520px; --brilho-x: 82%; --brilho-y: 60%; }
+  .triangulos { right: -120px; top: -150px; width: 820px; height: 820px; }
+  .conteudo { position: absolute; left: 88px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; gap: 30px; }
+  .marca { display: flex; align-items: center; gap: 22px; }
+  .marca .icone { height: 66px; }
+  .marca .nome { height: 52px; }
+  .versao {
+    font-weight: 800; font-size: 20px; letter-spacing: 0.04em;
+    padding: 6px 16px; border-radius: 999px;
+    border: 1.5px solid rgba(216, 255, 41, 0.75); color: var(--lima);
+  }
+  h1 { font-weight: 800; font-size: 92px; line-height: 0.98; letter-spacing: -0.03em; }
+  p { font-weight: 500; font-size: 26px; color: var(--texto-suave); max-width: 760px; line-height: 1.3; }
+  .assina { position: absolute; left: 88px; bottom: 34px; font-weight: 700; font-size: 15px; letter-spacing: 0.5em; color: var(--apagado); }
+</style>
+</head>
+<body>
+<div class="quadro">
+  <svg class="triangulos" viewBox="0 0 100 100">
+    <g transform="translate(50 52)">
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(1.0)" stroke-width="0.35" opacity="0.55"/>
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(0.78)" stroke-width="0.3" opacity="0.4"/>
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(0.58)" stroke-width="0.3" opacity="0.32"/>
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(0.4)" stroke-width="0.3" opacity="0.26"/>
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(1.3)" stroke-width="0.25" opacity="0.3"/>
+      <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-8) scale(1.65)" stroke-width="0.2" opacity="0.2"/>
+    </g>
+  </svg>
+
+  <div class="conteudo">
+    <div class="marca">
+      <img class="icone" src="../marca/icone.png" alt="">
+      <img class="nome" src="../marca/nome.png" alt="">
+      <span class="versao">V3</span>
+    </div>
+    <h1>Edite seus<br><span class="lima">Reels</span> com <span class="lima">IA</span></h1>
+    <p>Você manda os vídeos brutos. Ele entrega o Reels pronto.</p>
+  </div>
+  <div class="assina">BY LINCU</div>
+</div>
+</body>
+</html>

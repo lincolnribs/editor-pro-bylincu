@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap');
+
+:root {
+  --preto: #000000;
+  --fundo: #050600;
+  --lima: #d8ff29;
+  --lima-claro: #efffad;
+  --lima-escuro: #9aae12;
+  --oliva: #2b3510;
+  --texto: #ffffff;
+  --texto-suave: #e6e4dc;
+  --apagado: #8d927c;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--preto);
+  color: var(--texto);
+  font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.quadro {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 80% at var(--brilho-x, 85%) var(--brilho-y, 55%), rgba(66, 82, 16, 0.75), rgba(5, 6, 0, 0) 70%),
+    var(--preto);
+}
+
+.lima {
+  background: linear-gradient(135deg, var(--lima-claro) 0%, var(--lima) 45%, var(--lima-escuro) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.triangulos { position: absolute; pointer-events: none; }
+.triangulos path { fill: none; stroke: var(--lima); stroke-linejoin: round; }

@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Editor Pro by Lincu" width="100%">
+  <img src="assets/banner.png" alt="Editor Pro by Lincu" width="100%">
 </p>
 
 <p align="center">
-  <img alt="versão" src="https://img.shields.io/badge/versão-3.0-b8e351?labelColor=050607">
-  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-b8e351?labelColor=050607">
-  <img alt="Remotion" src="https://img.shields.io/badge/Remotion-4.0-b8e351?labelColor=050607">
-  <img alt="idioma" src="https://img.shields.io/badge/idioma-português-b8e351?labelColor=050607">
-  <img alt="custo" src="https://img.shields.io/badge/ferramentas-grátis%20e%20locais-b8e351?labelColor=050607">
+  <img alt="versão" src="https://img.shields.io/badge/versão-3.0-d8ff29?labelColor=050607">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-d8ff29?labelColor=050607">
+  <img alt="Remotion" src="https://img.shields.io/badge/Remotion-4.0-d8ff29?labelColor=050607">
+  <img alt="idioma" src="https://img.shields.io/badge/idioma-português-d8ff29?labelColor=050607">
+  <img alt="custo" src="https://img.shields.io/badge/ferramentas-grátis%20e%20locais-d8ff29?labelColor=050607">
 </p>
 
 <p align="center"><b>Você manda os brutos e pede “edita esse vídeo”. Ele entrega o Reels pronto, etapa por etapa.</b></p>
@@ -26,39 +26,35 @@ Depois, reinicie o Claude Code. Não precisa de conta, login nem chave.
 
 ## 🎬 Como funciona
 
-Cinco etapas, uma por conversa. Cada uma termina num ponto salvo, e o `/editar` sabe sempre onde o vídeo parou.
+<p align="center">
+  <img src="assets/etapas.png" alt="1 Organiza: prepara os vídeos brutos. 2 Planeja: monta o roteiro e você aprova. 3 Edita: corta, limpa a voz e anima os textos. 4 Sonoriza: trilha e efeitos no tempo certo. 5 Entrega: revisa e exporta o vídeo pronto." width="100%">
+</p>
 
-| Etapa | O que acontece |
-|---|---|
-| **1 · preparar** | Converte os brutos para 1080x1920, faz uma folha de miniaturas por take, mede a cor e transcreve a fala. |
-| **2 · plano** | Escolhe os melhores trechos e monta o plano cena a cena: texto, peças, transições, trilha e som. Você aprova pelo chat. |
-| **3 · montar** | Limpa a voz, corta os silêncios, corrige a cor take a take e monta tudo no Remotion. Sai uma prévia. |
-| **4 · som** | SFX nas ações da tela, trilha pela emoção da mensagem e volume medido (voz a -14 LUFS). |
-| **5 · entregar** | Conferência completa, render final e o vídeo salvo na pasta do cliente. |
+Uma etapa por conversa. Se parar no meio, é só chamar `/editar` que ele continua de onde parou.
 
 ## ✨ O que deixa o vídeo premium
 
-| | |
-|---|---|
-| 🎙️ **Voz limpa** | Tira eco, ruído e pancadas (DeepFilterNet, no seu computador) e corta os silêncios. |
-| 🔤 **Texto cinético** | Palavra a palavra, no tempo da fala, com blur e sem cortar acento. Seis entradas: blur, pop, deslizar, onda, máquina de escrever e letras. |
-| 🌀 **Motion medido** | Tempos em múltiplos de 8 quadros, curva 65/65 e tudo passando do ponto e assentando, como nos projetos profissionais. |
-| 🎞️ **Transições sempre** | Blur, flash, light leak, zoom, chicote de câmera e obturador, escolhidos pelo contexto. |
-| 🧩 **Peças prontas** | Pílula, card, contador e lista, além de fechos com logo, fade ou cartela. |
-| 🔊 **Som no ponto** | Biblioteca de SFX própria, com o pico de cada som alinhado à ação. |
-| ✅ **Conferência automática** | Margens do Reels, sem viúva, sem buraco entre cenas, sem texto colidindo, volume certo. |
-| 📉 **Gasta pouco** | Um script faz as contas e devolve 5 a 10 linhas. Cada etapa cabe numa conversa curta. |
-| ⚡ **Ativa sozinho** | Entra em ação num pedido de edição ou quando você só manda os arquivos de vídeo. |
+- 🎙️ **Voz limpa**, sem ruído, eco nem silêncios
+- 🔤 **Texto animado** no ritmo da fala
+- 🎞️ **Transições** de vídeo profissional
+- 🌀 **Animações suaves**, nada travado
+- 🎨 **Cor corrigida** em cada cena
+- 🧩 **Cards, contadores e listas** prontos
+- 🔊 **Efeitos sonoros** no tempo certo
+- ✅ **Revisão automática** antes de entregar
+- 💻 **Roda no seu computador**, com ferramentas grátis
+- 📉 **Gasta pouco** do seu plano do Claude
+- ⚡ **Começa sozinho** quando você manda o vídeo
 
 ## 🧩 Complementos (opcional)
 
-O plugin **Editor Pro Motion** traz três ferramentas extras. Elas só entram quando o vídeo pede: no plano, o Editor Pro mostra as que combinam, e você escolhe por número ou responde “nenhum”.
+Extras do plugin **Editor Pro Motion**. Só entram quando o vídeo pede.
 
-| Para | Complemento | Licença |
-|---|---|---|
-| Motion em plano contínuo, sem corte, com câmera estilo After Effects | [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing) | Apache-2.0 |
-| Logo do fechamento e ícones animados | [pixel2motion](https://github.com/nolangz/pixel2motion) | MIT |
-| Flash só na pessoa, texto atrás da cabeça | [claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects) | MIT |
+| Complemento | Licença |
+|---|---|
+| [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing) | Apache-2.0 |
+| [pixel2motion](https://github.com/nolangz/pixel2motion) | MIT |
+| [claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects) | MIT |
 
 <sub>Créditos em <a href="THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a>.</sub>
 
