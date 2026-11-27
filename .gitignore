@@ -7,3 +7,5 @@ Thumbs.db
 *.wav
 node_modules/
 .work/
+# Brandbook: só para uso pessoal, fica fora do repositório
+assets/marca/brandbook.html
