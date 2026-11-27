@@ -15,7 +15,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  background: var(--preto);
+  background: transparent;
   color: var(--texto);
   font-family: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -24,6 +24,7 @@ html, body {
 .quadro {
   position: relative;
   overflow: hidden;
+  border-radius: 32px;
   background:
     radial-gradient(ellipse 60% 80% at var(--brilho-x, 85%) var(--brilho-y, 55%), rgba(66, 82, 16, 0.75), rgba(5, 6, 0, 0) 70%),
     var(--preto);
