@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="cards.css">
+<style>
+  .quadro { width: 1280px; height: 300px; --brilho-x: 100%; --brilho-y: 50%; }
+  .triangulos { right: -330px; top: -170px; width: 640px; height: 640px; opacity: 0.25; }
+  .linha { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 0 48px; }
+  .card { width: 380px; height: 196px; justify-content: space-between; }
+  .card .titulo { font-size: 30px; }
+  .licenca {
+    align-self: flex-start; font-weight: 800; font-size: 16px; letter-spacing: 0.04em;
+    padding: 6px 16px; border-radius: 999px; border: 1.5px solid rgba(216, 255, 41, 0.75); color: var(--lima);
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="degrade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efffad"/><stop offset="0.45" stop-color="#d8ff29"/><stop offset="1" stop-color="#9aae12"/></linearGradient>
+</defs></svg>
+<div class="quadro">
+  <svg class="triangulos" viewBox="0 0 100 100"><g transform="translate(50 50)">
+    <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-12) scale(1.0)" stroke-width="0.35" opacity="0.4"/>
+    <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(-12) scale(0.7)" stroke-width="0.3" opacity="0.3"/>
+  </g></svg>
+  <div class="linha">
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="4" y="10" width="40" height="28" rx="5"/><path d="M20 18 L30 24 L20 30Z" class="cheio"/></svg><div class="titulo">motionmaxxing</div><span class="licenca">Apache-2.0</span></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="6" y="6" width="14" height="14" rx="3"/><rect x="28" y="6" width="14" height="14" rx="3"/><rect x="6" y="28" width="14" height="14" rx="3"/><path d="M35 28v14M28 35h14"/></svg><div class="titulo">pixel2motion</div><span class="licenca">MIT</span></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M24 4 L28 18 L42 24 L28 30 L24 44 L20 30 L6 24 L20 18Z"/></svg><div class="titulo">claude-video-effects</div><span class="licenca">MIT</span></div>
+  </div>
+</div>
+</body>
+</html>

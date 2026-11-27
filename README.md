@@ -3,26 +3,22 @@
 </p>
 
 <p align="center">
-  <img alt="versão" src="https://img.shields.io/badge/versão-3.0-d8ff29?labelColor=050607">
-  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-d8ff29?labelColor=050607">
-  <img alt="Remotion" src="https://img.shields.io/badge/Remotion-4.0-d8ff29?labelColor=050607">
-  <img alt="idioma" src="https://img.shields.io/badge/idioma-português-d8ff29?labelColor=050607">
-  <img alt="custo" src="https://img.shields.io/badge/ferramentas-grátis%20e%20locais-d8ff29?labelColor=050607">
+  <img src="assets/selos.png" alt="V3.0 · Plugin do Claude Code · Feito com Remotion · Em português · Ferramentas grátis" width="100%">
 </p>
-
-<p align="center"><b>Você manda os brutos e pede “edita esse vídeo”. Ele entrega o Reels pronto, etapa por etapa.</b></p>
 
 ---
 
 ## ⚡ Instale em 1 passo
 
-Cole o link no chat do Claude Code e escreva **instala isso**:
+<p align="center">
+  <img src="assets/instalar.png" alt="1 Copie o link deste repositório. 2 Cole no Claude e escreva instala isso. 3 Reinicie e mande o vídeo: edita esse vídeo." width="100%">
+</p>
 
 ```
 https://github.com/lincolnribs/editor-pro-bylincu
 ```
 
-Depois, reinicie o Claude Code. Não precisa de conta, login nem chave.
+Não precisa de conta, login nem chave.
 
 ## 🎬 Como funciona
 
@@ -34,27 +30,17 @@ Uma etapa por conversa. Se parar no meio, é só chamar `/editar` que ele contin
 
 ## ✨ O que deixa o vídeo premium
 
-- 🎙️ **Voz limpa**, sem ruído, eco nem silêncios
-- 🔤 **Texto animado** no ritmo da fala
-- 🎞️ **Transições** de vídeo profissional
-- 🌀 **Animações suaves**, nada travado
-- 🎨 **Cor corrigida** em cada cena
-- 🧩 **Cards, contadores e listas** prontos
-- 🔊 **Efeitos sonoros** no tempo certo
-- ✅ **Revisão automática** antes de entregar
-- 💻 **Roda no seu computador**, com ferramentas grátis
-- 📉 **Gasta pouco** do seu plano do Claude
-- ⚡ **Começa sozinho** quando você manda o vídeo
+<p align="center">
+  <img src="assets/premium.png" alt="Voz limpa, texto animado no ritmo da fala, transições profissionais, animações suaves, cor corrigida cena a cena, cards e contadores prontos, efeitos sonoros no tempo certo, feito para Reels, revisão automática, roda no seu computador com ferramentas grátis, gasta pouco do seu plano e começa sozinho quando você manda o vídeo." width="100%">
+</p>
 
 ## 🧩 Complementos (opcional)
 
-Extras do plugin **Editor Pro Motion**. Só entram quando o vídeo pede.
+<p align="center">
+  <img src="assets/complementos.png" alt="motionmaxxing (Apache-2.0), pixel2motion (MIT) e claude-video-effects (MIT)" width="100%">
+</p>
 
-| Complemento | Licença |
-|---|---|
-| [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing) | Apache-2.0 |
-| [pixel2motion](https://github.com/nolangz/pixel2motion) | MIT |
-| [claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects) | MIT |
+Extras do plugin **Editor Pro Motion**. Só entram quando o vídeo pede: [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing), [pixel2motion](https://github.com/nolangz/pixel2motion) e [claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects).
 
 <sub>Créditos em <a href="THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a>.</sub>
 

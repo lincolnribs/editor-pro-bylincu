@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="cards.css">
+<style>
+  .quadro { width: 1280px; height: 700px; --brilho-x: 95%; --brilho-y: 0%; }
+  .triangulos { right: -380px; top: -420px; width: 700px; height: 700px; opacity: 0.3; }
+  .grade { position: absolute; inset: 48px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .card { padding: 22px; gap: 0; }
+  .card .titulo { margin-top: 22px; font-size: 24px; }
+  .card .desc { font-size: 16px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="degrade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efffad"/><stop offset="0.45" stop-color="#d8ff29"/><stop offset="1" stop-color="#9aae12"/></linearGradient>
+</defs></svg>
+<div class="quadro">
+  <svg class="triangulos" viewBox="0 0 100 100"><g transform="translate(50 50)">
+    <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(20) scale(1.0)" stroke-width="0.35" opacity="0.4"/>
+    <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(20) scale(0.72)" stroke-width="0.3" opacity="0.3"/>
+    <path d="M-26 -38 L40 0 L-26 38 Z" transform="rotate(20) scale(0.46)" stroke-width="0.3" opacity="0.22"/>
+  </g></svg>
+
+  <div class="grade">
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="17" y="5" width="14" height="24" rx="7"/><path d="M10 22c0 8 6 13 14 13s14-5 14-13M24 35v8M17 43h14"/></svg><div class="titulo">Voz limpa</div><div class="desc">Sem ruído, eco nem silêncios</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M6 38 L16 10 L26 38M10 29h12M32 22c2-3 10-3 10 3v13M42 30c-9-1-12 2-12 4.5S33 39 36 38.5 42 35 42 31"/></svg><div class="titulo">Texto animado</div><div class="desc">No ritmo da fala</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="5" y="11" width="22" height="26" rx="4"/><rect x="21" y="11" width="22" height="26" rx="4"/><path d="M27 18 L33 24 L27 30"/></svg><div class="titulo">Transições</div><div class="desc">Com cara de vídeo profissional</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M5 34 C14 34 16 14 24 14 S34 34 43 34"/><circle cx="24" cy="14" r="3" class="cheio"/></svg><div class="titulo">Animações suaves</div><div class="desc">Fluidas, nada travado</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M24 5 C24 5 10 20 10 29 a14 14 0 0 0 28 0 C38 20 24 5 24 5Z"/><path d="M17 30a7 7 0 0 0 7 7"/></svg><div class="titulo">Cor corrigida</div><div class="desc">Ajustada cena a cena</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="5" y="8" width="22" height="14" rx="4"/><rect x="21" y="26" width="22" height="14" rx="4"/><path d="M33 8h10M38 3v10"/></svg><div class="titulo">Peças prontas</div><div class="desc">Cards, contadores e listas</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M6 19h8l10-9v28l-10-9H6z"/><path d="M31 17c3 4 3 10 0 14M37 12c6 7 6 17 0 24"/></svg><div class="titulo">Efeitos sonoros</div><div class="desc">Trilha e sons no tempo certo</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="13" y="4" width="22" height="40" rx="5"/><path d="M13 12h22M13 36h22"/></svg><div class="titulo">Feito para Reels</div><div class="desc">Vertical e nas margens certas</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19"/><path d="M15 24.5 L21.5 31 L34 18"/></svg><div class="titulo">Revisão automática</div><div class="desc">Confere tudo no final</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="26" rx="4"/><path d="M17 42h14M24 34v8"/></svg><div class="titulo">No seu computador</div><div class="desc">Com ferramentas grátis</div></div>
+    <div class="card"><svg class="icone" viewBox="0 0 48 48"><path d="M5 10 L17 24 L26 17 L43 36"/><path d="M33 36h10V26"/></svg><div class="titulo">Gasta pouco</div><div class="desc">Poupa o seu plano</div></div>
+    <div class="card destaque"><svg class="icone" viewBox="0 0 48 48"><path d="M27 4 L9 27 h14 l-3 17 L39 20 H25z"/></svg><div class="titulo">Começa sozinho</div><div class="desc">É só mandar o vídeo</div></div>
+  </div>
+</div>
+</body>
+</html>
