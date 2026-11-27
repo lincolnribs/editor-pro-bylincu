@@ -1,6 +1,6 @@
 # roteiro.json (campos)
 
-Arquivo `_CLAUDE/edicao/roteiro.json`. Tempos em **segundos** na linha do tempo final. Arquivos com caminho relativo a `media/`. Tipos completos em `src/tipos.ts`.
+Arquivo `_EDITOR-PRO/edicao/roteiro.json`. Tempos em **segundos** na linha do tempo final. Arquivos com caminho relativo a `media/`. Tipos completos em `src/tipos.ts`.
 
 **Textos não levam tempo:** escreva `texto`, `estilo`, `entrada`, `destaque`. O `ep.py render` (ou `ep.py tempos`) acha a frase na fala da base e preenche `inicio`, `tempos` e `fim`. Frase repetida: `"perto": <segundo>`.
 
@@ -20,7 +20,7 @@ Arquivo `_CLAUDE/edicao/roteiro.json`. Tempos em **segundos** na linha do tempo 
   "pecas": [{"nome": "Contador", "inicio": 10.4, "fim": 13.6, "props": {"ate": 1200, "prefixo": "+", "y": 1100}}],
   "fecho": {"tipo": "logo", "inicio": 22.0, "logo": "marca/logo.png", "largura": 520},
   "acabamento": {"grao": 0.05, "vinheta": 0.2, "deriva": true},
-  "sfx": [{"t": 5.2, "arquivo": "sfx/whoosh-01.mp3", "volume": 0.5, "pico": 0.18}],
+  "sfx": [{"t": 5.2, "arquivo": "sfx/whoosh-01.mp3"}],
   "trilha": {"arquivo": "trilha.mp3", "volume": 0.12}
 }
 ```
@@ -32,5 +32,5 @@ Arquivo `_CLAUDE/edicao/roteiro.json`. Tempos em **segundos** na linha do tempo 
 - **textos:** `estilo` (`linha` · `karaoke` · `palavra` · `hierarquia` · `marca-texto` · `caixa` · `lateral` + `lado`) e `entrada` vêm do plano, cena a cena: não preencha com padrão. `caixaAlta: true` quando o caminho pedir. `texto` com ` | ` para quebrar linha (sem viúva; em `palavra` cada ` | ` é um bloco que troca o anterior; em `hierarquia` o destaque fica gigante). `tempos` só se quiser forçar (o script preenche). `tipo`: `lettering` | `legenda` | `impacto`. `centro: true` centraliza na tela. `y` muda a faixa só daquele texto.
 - **acabamento:** só se a direção pediu. `grao` 0–0,12, `vinheta` 0–0,4 (neutra), `deriva` true. `tema.adiantar`: quadros que o texto entra antes da fala (padrão 3). `destaqueFonte` por texto: `serifa` | `impacto`.
 - **pecas:** `Fundo` {cor, brilho, grao} (tela de motion viva; primeiro da lista) · `Pilula` {texto, x, y, cor} · `Card` {titulo, texto, x, y, largura} · `Contador` {de, ate, prefixo, sufixo, y} · `Lista` {itens, tempos, x, y} · ou o nome de uma peça de `src/extras.tsx`. Início e fim em múltiplos de 4 quadros quando der (0,133 s).
-- **sfx:** `pico` = segundos até o pico do som (`ep.py sfx`): o pico cai em `t`. Volume 0–1.
+- **sfx:** só `t` (o momento da ação) e `arquivo`. O `ep.py mixar` mede o pico e o nível de cada som sozinho; `volume` 0.5 = padrão, 1 = +6 dB. SFX e trilha não passam pelo motor (mixados por FFmpeg depois da imagem).
 - **trilha:** volume medido (`ep.py medir trilha.mp3 --ganho <volume>` ≈ -24 LUFS sob voz a -14). Fade automático.

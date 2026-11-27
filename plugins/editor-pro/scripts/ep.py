@@ -10,17 +10,19 @@ Editor Pro: um comando para tudo o que é conta (tempo, volume, cor, render). Im
   ep.py etapa <pasta> <etapa>=<status>        pendente | em_andamento | aguardando_aprovacao | concluido | nao_precisa
   ep.py pendencia <pasta> <etapa> "<texto>"   |  ep.py resolver <pasta> <id>
   ep.py inventario <pasta> <arquivos ou pastas...>
-  ep.py converter <pasta> [arquivos...]       1080x1920, 30 fps CFR, rotação respeitada -> _CLAUDE/midia/
+  ep.py converter <pasta> [arquivos...]       1080x1920, 30 fps CFR, rotação respeitada -> _EDITOR-PRO/midia/
   ep.py folha <video> [--quadros 12] [--em 3.2 --grade] [-o saida.jpg]
   ep.py cor <videos...>                       mede brilho, temperatura e saturação; sugere a correção
-  ep.py transcrever <pasta> [videos...]       Whisper local -> _CLAUDE/transcricao/<nome>.txt (por frase)
+  ep.py transcrever <pasta> [videos...]       Whisper local -> _EDITOR-PRO/transcricao/<nome>.txt (por frase)
   ep.py frases <captions.json>                JSON de palavras -> .txt por frase
   ep.py voz <args do limpar_voz.py>           limpeza de voz + corte de silêncios (DeepFilterNet)
   ep.py doctor                                confere em segundos o que falta no computador
   ep.py instalar [motor|transcricao]          instala o motor raea (fixo, checksum) e a transcrição local
-  ep.py projeto <pasta> [--atualizar]         cria _CLAUDE/edicao (projeto raea) a partir do template e liga a mídia
+  ep.py projeto <pasta> [--atualizar]         cria _EDITOR-PRO/edicao (projeto raea) a partir do template e liga a mídia
   ep.py tempos <pasta>                        acha cada texto do roteiro na fala e preenche inicio, tempos e fim
-  ep.py render <pasta> [--previa]             raea, na GPU: _CLAUDE/previa.mp4 (metade do tamanho) | _CLAUDE/final.mp4
+  ep.py mixar <pasta> [--final]               voz + SFX + trilha só com FFmpeg (segundos), sem re-renderizar a imagem
+  ep.py marca <pasta>                         design.json do cliente (cores, fontes, zonas proibidas); cria o modelo se faltar
+  ep.py render <pasta> [--previa] [--forcar]  confere, renderiza a imagem no raea (GPU) e mixa o som: previa.mp4 | final.mp4
   ep.py checar <pasta> [--final]              raea check: volume, congelado, área segura, leitura, legenda fora da palavra
   ep.py medir <arquivos> [--ini s --dur s] [--ganho 0.07]
   ep.py sfx [categoria] [--busca termo]       biblioteca de SFX (duração e tempo até o pico)
@@ -82,8 +84,14 @@ def gravar_json(p, d):
         json.dump(d, f, ensure_ascii=False, indent=1)
 
 
-def claude(pasta, *partes):
-    return os.path.join(os.path.abspath(pasta), "_CLAUDE", *partes)
+PASTA_TRABALHO = "_EDITOR-PRO"  # visível de propósito (a prévia mora aqui); projetos antigos em _CLAUDE continuam funcionando
+
+
+def trabalho(pasta, *partes):
+    raiz = os.path.abspath(pasta)
+    antiga = os.path.join(raiz, "_CLAUDE")
+    nome = "_CLAUDE" if os.path.isdir(antiga) and not os.path.isdir(os.path.join(raiz, PASTA_TRABALHO)) else PASTA_TRABALHO
+    return os.path.join(raiz, nome, *partes)
 
 
 def config():
@@ -122,14 +130,14 @@ def cmd_config(a):
 
 # ---------------- estado ----------------
 def estado(pasta):
-    d = ler_json(claude(pasta, "projeto.json"))
+    d = ler_json(trabalho(pasta, "projeto.json"))
     if d is None:
         raise SystemExit(f"sem projeto em {pasta}. Use: ep.py novo <pasta> cliente=... modelo=... tema=...")
     return d
 
 
 def salvar(pasta, d):
-    gravar_json(claude(pasta, "projeto.json"), d)
+    gravar_json(trabalho(pasta, "projeto.json"), d)
 
 
 def mostrar_status(d):
@@ -147,7 +155,7 @@ def mostrar_status(d):
 
 def cmd_novo(a):
     pasta, kvs = a[0], a[1:]
-    if os.path.exists(claude(pasta, "projeto.json")):
+    if os.path.exists(trabalho(pasta, "projeto.json")):
         raise SystemExit("já existe projeto aqui. Use: ep.py status <pasta>")
     d = {"etapas": {e: "pendente" for e in ETAPAS}, "pendencias": [], "criado": time.strftime("%Y-%m-%d")}
     for kv in kvs:
@@ -158,7 +166,7 @@ def cmd_novo(a):
     if d.get("modelo") == "motion":
         d["etapas"]["preparar"] = "nao_precisa"
     for sub in ("midia", "folhas", "transcricao", "_lixo"):
-        os.makedirs(claude(pasta, sub), exist_ok=True)
+        os.makedirs(trabalho(pasta, sub), exist_ok=True)
     salvar(pasta, d)
     mostrar_status(d)
 
@@ -254,15 +262,15 @@ def cmd_inventario(a):
             alertas.append(f"{nome}: fps variável (a conversão deixa em 30 CFR)")
         if min(w, h) < 720:
             alertas.append(f"{nome}: resolução baixa ({w}x{h})")
-    os.makedirs(claude(pasta), exist_ok=True)
-    with open(claude(pasta, "inventario.txt"), "w", encoding="utf-8") as f:
+    os.makedirs(trabalho(pasta), exist_ok=True)
+    with open(trabalho(pasta, "inventario.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")
-    d = ler_json(claude(pasta, "projeto.json"))
+    d = ler_json(trabalho(pasta, "projeto.json"))
     if d is not None:
         d["brutos"] = vids
         salvar(pasta, d)
     total = sum(duracao(v) for v in vids)
-    print(f"ok: {len(vids)} arquivos, {total:.0f}s no total -> _CLAUDE/inventario.txt")
+    print(f"ok: {len(vids)} arquivos, {total:.0f}s no total -> _EDITOR-PRO/inventario.txt")
     for al in alertas[:10]:
         print("  alerta:", al)
 
@@ -270,11 +278,11 @@ def cmd_inventario(a):
 def cmd_converter(a):
     pasta = a[0]
     vids = listar_videos(a[1:]) or estado(pasta).get("brutos", [])
-    os.makedirs(claude(pasta, "midia"), exist_ok=True)
+    os.makedirs(trabalho(pasta, "midia"), exist_ok=True)
     vf = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,setsar=1"
     feitos = 0
     for v in vids:
-        saida = claude(pasta, "midia", os.path.splitext(os.path.basename(v))[0] + ".mp4")
+        saida = trabalho(pasta, "midia", os.path.splitext(os.path.basename(v))[0] + ".mp4")
         if os.path.exists(saida) and os.path.getmtime(saida) > os.path.getmtime(v):
             continue
         r = run(["ffmpeg", "-v", "error", "-y", "-i", v, "-vf", vf, "-c:v", "libx264", "-preset", "fast", "-crf", "18",
@@ -283,7 +291,7 @@ def cmd_converter(a):
             print(f"  erro em {os.path.basename(v)}: {r.stderr.strip()[-200:]}")
             continue
         feitos += 1
-    print(f"ok: {feitos} convertidos ({len(vids) - feitos} já estavam prontos) -> _CLAUDE/midia/")
+    print(f"ok: {feitos} convertidos ({len(vids) - feitos} já estavam prontos) -> _EDITOR-PRO/midia/")
 
 
 def cmd_folha(a):
@@ -549,8 +557,8 @@ def precisa_transcricao():
 def cmd_transcrever(a):
     precisa_transcricao()
     pasta = a[0]
-    vids = listar_videos(a[1:]) or listar_videos([claude(pasta, "midia")])
-    destino = claude(pasta, "transcricao")
+    vids = listar_videos(a[1:]) or listar_videos([trabalho(pasta, "midia")])
+    destino = trabalho(pasta, "transcricao")
     os.makedirs(destino, exist_ok=True)
     script = os.path.join(BASE, "scripts", "transcrever.mjs")
     for v in vids:
@@ -663,11 +671,11 @@ def cmd_doctor(_):
 
 
 def projeto(pasta):
-    return claude(pasta, "edicao")
+    return trabalho(pasta, "edicao")
 
 
 def cmd_projeto(a):
-    """Cria _CLAUDE/edicao/ (projeto raea) a partir do template e liga a mídia em media/midia/ (hardlink, sem gastar disco)."""
+    """Cria _EDITOR-PRO/edicao/ (projeto raea) a partir do template e liga a mídia em media/midia/ (hardlink, sem gastar disco)."""
     pasta = a[0]
     dest = projeto(pasta)
     novo = not os.path.isdir(os.path.join(dest, "src"))
@@ -682,7 +690,7 @@ def cmd_projeto(a):
                 os.makedirs(os.path.dirname(os.path.join(dest, rel)), exist_ok=True)
                 shutil.copy2(os.path.join(TEMPLATE, rel), os.path.join(dest, rel))
         print("componentes atualizados (extras.tsx e roteiro.json mantidos)")
-    midia, pub = claude(pasta, "midia"), os.path.join(dest, "media", "midia")
+    midia, pub = trabalho(pasta, "midia"), os.path.join(dest, "media", "midia")
     n = 0
     if os.path.isdir(midia):
         os.makedirs(pub, exist_ok=True)
@@ -694,10 +702,12 @@ def cmd_projeto(a):
                 except OSError:
                     shutil.copy2(src, dst)
                 n += 1
-    print(f"ok: {dest} ({'criado' if novo else 'já existia'}; {n} arquivo(s) novos em media/midia/). Arquivos do vídeo vão em media/.")
+    marca = aplicar_design(pasta)
+    print(f"ok: {dest} ({'criado' if novo else 'já existia'}; {n} arquivo(s) novos em media/midia/{'; identidade do cliente aplicada' if marca else ''}). Arquivos do vídeo vão em media/.")
 
 
 def cmd_render(a):
+    """Imagem no motor (voz junto, sem SFX nem trilha) + mixagem por FFmpeg. Antes, a conferência bloqueia o que daria retrabalho."""
     pasta = a[0]
     previa = "--previa" in a
     proj = projeto(pasta)
@@ -706,33 +716,196 @@ def cmd_render(a):
     n = preencher_tempos(pasta)
     if n:
         print(f"tempos calculados para {n} texto(s)")
-    saida = claude(pasta, "previa.mp4" if previa else "final.mp4")  # uma só versão: sobrescreve
-    args = ["render", "edit.tsx", "-o", saida, "--manifest", os.path.join(proj, ".work", "render.json")]
+    prob, _ = conferir(pasta)
+    if prob and "--forcar" not in a:
+        print(f"render bloqueado: {len(prob)} problema(s) no roteiro (corrija ou use --forcar):")
+        for p in prob[:8]:
+            print("  ✗", p)
+        sys.exit(1)
+    imagem = trabalho(pasta, "imagem-previa.mp4" if previa else "imagem.mp4")  # cache da imagem: o som muda sem re-renderizar
+    args = ["render", "edit.tsx", "-o", imagem, "--manifest", os.path.join(proj, ".work", "render.json")]
     args += ["--scale", "0.5", "--quality", "draft"] if previa else ["--quality", "high"]
     t0 = time.time()
     cod, linhas = raea(args, proj, os.path.join(proj, ".work", "render.log"))
     seg = time.time() - t0
-    if cod != 0 or not os.path.exists(saida):
+    if cod != 0 or not os.path.exists(imagem):
         print(f"ERRO no render ({seg:.0f}s). Últimas linhas (log em .work/render.log):")
         print("\n".join(linhas[-10:]))
         sys.exit(1)
-    # Limitador no fim (voz + SFX + trilha somados podem passar de -1 dBTP): só o áudio, o vídeo é copiado.
-    tmp = saida[:-4] + ".lim.mp4"
-    r = run(["ffmpeg", "-v", "error", "-y", "-i", saida, "-c:v", "copy", "-af", "alimiter=limit=0.84:level=disabled:attack=2:release=60",
-             "-c:a", "aac", "-b:a", "192k", tmp])
-    if r.returncode == 0 and os.path.exists(tmp):
-        os.replace(tmp, saida)
     avisos = [l for l in linhas if l.lstrip().startswith(("warn", "error", "NOTE", "REFUSED"))]
-    print(f"ok: {saida} ({os.path.getsize(saida) / 1e6:.1f} MB, {duracao(saida):.2f}s) em {seg:.0f}s")
+    print(f"imagem: {os.path.basename(imagem)} em {seg:.0f}s")
     for l in avisos[:6]:
         print("  " + l.strip()[:200])
+    mixar(pasta, final=not previa)
+
+
+def _alvo_sfx_lufs():
+    return float(config().get("sfx_lufs", -24.0))  # loudness de cada SFX com volume 0.5 (≈10 dB sob a voz a -14)
+
+
+def lufs_sfx(arq):
+    """Loudness de um som curto: integrado do ebur128; sons curtos demais caem no curto prazo máximo (S)."""
+    r = run(["ffmpeg", "-hide_banner", "-nostats", "-i", arq, "-af", "apad=pad_dur=0.5,ebur128", "-f", "null", "-"])
+    resumo = r.stderr[r.stderr.rfind("Summary:"):]
+    m = re.search(r"I:\s*(-?[\d.]+) LUFS", resumo)
+    if m and float(m.group(1)) > -70:
+        return float(m.group(1))
+    curtos = [float(x) for x in re.findall(r"S:\s*(-?[\d.]+)", r.stderr) if float(x) > -70]
+    return max(curtos) if curtos else -30.0
+
+
+def mixar(pasta, final=False):
+    """Voz (do vídeo da imagem) + SFX + trilha, só com FFmpeg, em segundos. Corrige sozinho:
+    pico de cada SFX medido no próprio arquivo (o pico cai em `t`), nível igualado entre os SFX, trilha com fade,
+    limitador no fim (-1 dBTP). Gera previa.mp4/final.mp4 e sfx-stem.wav (só os SFX, para quem for refinar)."""
+    proj = projeto(pasta)
+    rot = ler_json(os.path.join(proj, "roteiro.json"), {}) or {}
+    imagem = trabalho(pasta, "imagem.mp4" if final else "imagem-previa.mp4")
+    saida = trabalho(pasta, "final.mp4" if final else "previa.mp4")
+    if not os.path.exists(imagem):
+        raise SystemExit(f"sem imagem renderizada ({os.path.basename(imagem)}). Rode: ep.py render <pasta>{'' if final else ' --previa'}")
+    dur = duracao(imagem)
+    tem_voz = any(s.get("codec_type") == "audio" for s in probe(imagem).get("streams", []))
+    media = os.path.join(proj, "media")
+    entradas, filtros, rotulos, sfx_rotulos, corrigidos = ["-i", imagem], [], [], [], 0
+    if tem_voz:
+        filtros.append("[0:a]aresample=48000,aformat=channel_layouts=stereo[voz]")
+        rotulos.append("[voz]")
+    for k, s in enumerate(rot.get("sfx") or []):
+        arq = os.path.join(media, s["arquivo"])
+        if not os.path.exists(arq):
+            print(f"  aviso: SFX não existe: {s['arquivo']}")
+            continue
+        _, pico_med, _ = pico_sfx(arq)
+        pico = s.get("pico")
+        if pico is None and pico_med > 0.03:
+            pico, corrigidos = pico_med, corrigidos + 1
+        # nivelado pela loudness (não pelo pico): todos os SFX no mesmo nível percebido; `volume` 0.5 = alvo, 1 = +6 dB
+        ganho_db = (_alvo_sfx_lufs() - lufs_sfx(arq)) + 20 * __import__("math").log10(max(0.01, s.get("volume", 0.5)) / 0.5)
+        ganho_db = max(-24.0, min(18.0, ganho_db))
+        ini = max(0.0, s["t"] - (pico or 0))
+        i = len(entradas) // 2
+        entradas += ["-i", arq]
+        filtros.append(f"[{i}:a]aresample=48000,aformat=channel_layouts=stereo,volume={ganho_db:.2f}dB,adelay={int(ini * 1000)}:all=1[s{k}]")
+        sfx_rotulos.append(f"[s{k}]")
+    if sfx_rotulos:
+        if len(sfx_rotulos) > 1:
+            filtros.append(f"{''.join(sfx_rotulos)}amix=inputs={len(sfx_rotulos)}:normalize=0:dropout_transition=0,asplit=2[sfx][sfxstem]")
+        else:
+            filtros.append(f"{sfx_rotulos[0]}asplit=2[sfx][sfxstem]")
+        rotulos.append("[sfx]")
+    tr = rot.get("trilha")
+    if tr and os.path.exists(os.path.join(media, tr["arquivo"])):
+        i = len(entradas) // 2
+        entradas += ["-stream_loop", "-1", "-ss", str(tr.get("desde", 0)), "-i", os.path.join(media, tr["arquivo"])]
+        fo = max(0.0, dur - 1.0)
+        filtros.append(f"[{i}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{dur:.3f},volume={tr['volume']},"
+                       f"afade=t=in:d=0.5,afade=t=out:st={fo:.3f}:d=1[trilha]")
+        rotulos.append("[trilha]")
+    if not rotulos:
+        shutil.copy2(imagem, saida)
+        print(f"ok: {saida} (sem som)")
+        return
+    filtros.append(f"{''.join(rotulos)}amix=inputs={len(rotulos)}:normalize=0:dropout_transition=0,"
+                   f"atrim=0:{dur:.3f},alimiter=limit=0.84:level=disabled:attack=2:release=60[mix]")
+    cmd = ["ffmpeg", "-v", "error", "-y"] + entradas + ["-filter_complex", ";".join(filtros), "-map", "0:v", "-map", "[mix]",
+                                                         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", saida]
+    if sfx_rotulos:
+        cmd += ["-map", "[sfxstem]", "-ac", "2", trabalho(pasta, "sfx-stem.wav")]
+    t0 = time.time()
+    r = run(cmd)
+    if r.returncode != 0:
+        raise SystemExit("mixagem falhou: " + r.stderr.strip()[-400:])
+    print(f"ok: {saida} ({duracao(saida):.2f}s) mixado em {time.time() - t0:.1f}s: voz {'sim' if tem_voz else 'não'}, "
+          f"{len(sfx_rotulos)} SFX{f' ({corrigidos} com pico preenchido)' if corrigidos else ''}, trilha {'sim' if tr else 'não'}")
+    print("  " + medir(saida))
+
+
+def cmd_mixar(a):
+    mixar(a[0], final="--final" in a)
+
+
+# ---------------- identidade do cliente (design.json) ----------------
+DESIGN_MODELO = {
+    "cores": {"texto": "#FFFFFF", "destaque": "#B8E351", "fundo": "#050607", "sobreFundo": "#FFFFFF", "sobreDestaque": "#050607"},
+    "fontes": {
+        "texto": {"familia": "Montserrat", "arquivo": None, "peso": 800},
+        "impacto": {"familia": "Anton", "arquivo": None},
+        "serifa": {"familia": "Instrument Serif", "arquivo": None},
+    },
+    "tamanhos": {"lettering": 92, "legenda": 48},
+    "zonas": {"faixaY": 1240, "proibidas": []},
+    "sombra": False,
+    "logo": None,
+}
+
+
+def arquivo_design(pasta):
+    d = ler_json(trabalho(pasta, "projeto.json"), {}) or {}
+    clientes = config().get("clientes")
+    if clientes and d.get("cliente") and os.path.isdir(os.path.join(clientes, d["cliente"])):
+        return os.path.join(clientes, d["cliente"], "design.json")
+    return None
+
+
+def aplicar_design(pasta):
+    """Copia a identidade do cliente para o tema do roteiro e as fontes dele para media/fontes. Zero token."""
+    arq = arquivo_design(pasta)
+    des = ler_json(arq, None) if arq else None
+    if not des:
+        return False
+    proj = projeto(pasta)
+    rot = ler_json(os.path.join(proj, "roteiro.json"), {}) or {}
+    tema = rot.setdefault("tema", {})
+    c, f, tam = des.get("cores", {}), des.get("fontes", {}), des.get("tamanhos", {})
+    tema.update({k2: c[k1] for k1, k2 in [("texto", "cor"), ("destaque", "destaque"), ("fundo", "fundo"),
+                                          ("sobreFundo", "corSobreFundo"), ("sobreDestaque", "corSobreDestaque")] if c.get(k1)})
+    for chave, (fam, arqk) in {"texto": ("fonte", "arquivoFonte"), "impacto": ("fonteImpacto", "arquivoFonteImpacto"),
+                               "serifa": ("fonteSerifa", "arquivoFonteSerifa")}.items():
+        fonte = f.get(chave) or {}
+        if fonte.get("familia"):
+            tema[fam] = fonte["familia"]
+        if fonte.get("arquivo"):
+            origem = fonte["arquivo"] if os.path.isabs(fonte["arquivo"]) else os.path.join(os.path.dirname(arq), fonte["arquivo"])
+            if os.path.exists(origem):
+                os.makedirs(os.path.join(proj, "media", "fontes"), exist_ok=True)
+                shutil.copy2(origem, os.path.join(proj, "media", "fontes", os.path.basename(origem)))
+                tema[arqk] = "fontes/" + os.path.basename(origem)
+        if chave == "texto" and fonte.get("peso"):
+            tema["peso"] = fonte["peso"]
+    if tam.get("lettering"):
+        tema["tamanho"] = tam["lettering"]
+    if tam.get("legenda"):
+        tema["tamanhoLegenda"] = tam["legenda"]
+    if "sombra" in des:
+        tema["sombra"] = bool(des["sombra"])
+    if des.get("zonas", {}).get("faixaY"):
+        rot.setdefault("faixaY", des["zonas"]["faixaY"])
+    gravar_json(os.path.join(proj, "roteiro.json"), rot)
+    return True
+
+
+def cmd_marca(a):
+    """Mostra o design.json do cliente, ou cria o modelo para preencher (cores, fontes, tamanhos, zonas proibidas, logo)."""
+    arq = arquivo_design(a[0])
+    if not arq:
+        raise SystemExit("defina a pasta de clientes (ep.py config clientes=...) e o cliente no projeto")
+    if not os.path.exists(arq):
+        gravar_json(arq, DESIGN_MODELO)
+        print(f"criado: {arq} (preencha com as cores, fontes e zonas do cliente)")
+        return
+    des = ler_json(arq, {})
+    c = des.get("cores", {})
+    print(f"{arq}: cores {c.get('texto')} / destaque {c.get('destaque')} / fundo {c.get('fundo')} · "
+          f"fontes {', '.join((v or {}).get('familia', '?') for v in des.get('fontes', {}).values())} · "
+          f"{len(des.get('zonas', {}).get('proibidas', []))} zona(s) proibida(s)")
 
 
 def cmd_checar(a):
     """raea check no vídeo pronto: volume, pico, trilha sob a voz, congelado, flash, área segura, leitura, legenda fora da palavra."""
     pasta = a[0]
     proj = projeto(pasta)
-    video = claude(pasta, "final.mp4" if "--final" in a else "previa.mp4")
+    video = trabalho(pasta, "final.mp4" if "--final" in a else "previa.mp4")
     if not os.path.exists(video):
         raise SystemExit(f"sem vídeo: {video}")
     args = ["check", video, "--platform", config().get("plataforma", "instagram"), "-o", os.path.join(proj, ".work", "check.json")]
@@ -769,8 +942,8 @@ def _norm(p):
 
 
 def palavras_da_base(pasta):
-    """Palavras da base (tempo final do vídeo): _CLAUDE/transcricao/base.json, no formato do Whisper/Remotion."""
-    arq = claude(pasta, "transcricao", "base.json")
+    """Palavras da base (tempo final do vídeo): _EDITOR-PRO/transcricao/base.json, no formato do Whisper/Remotion."""
+    arq = trabalho(pasta, "transcricao", "base.json")
     if not os.path.exists(arq):
         return []
     return [(ini, fim, txt) for ini, fim, txt in palavras(ler_json(arq, []))]
@@ -931,7 +1104,7 @@ def cmd_sfx(a):
 def cmd_revisar(a):
     """Tiras de 6 quadros seguidos (-4, -2, 0, +2, +4, +8) em cada momento de movimento: mostra o tempo, não só o quadro."""
     pasta = a[0]
-    video = claude(pasta, "final.mp4" if "--final" in a else "previa.mp4")
+    video = trabalho(pasta, "final.mp4" if "--final" in a else "previa.mp4")
     rot = ler_json(os.path.join(projeto(pasta), "roteiro.json"), {})
     if not os.path.exists(video):
         raise SystemExit(f"sem vídeo: {video}")
@@ -952,7 +1125,7 @@ def cmd_revisar(a):
             vistos.append(t)
             sel.append((t, nome))
     sel = sel[:12]
-    pasta_out = claude(pasta, "folhas")
+    pasta_out = trabalho(pasta, "folhas")
     os.makedirs(pasta_out, exist_ok=True)
     tiras = []
     for i, (t, _) in enumerate(sel):
@@ -980,11 +1153,11 @@ def cmd_revisar(a):
 
 # ---------------- histórico do cliente (para variar entre vídeos) ----------------
 def arquivo_historico(pasta):
-    d = ler_json(claude(pasta, "projeto.json"), {}) or {}
+    d = ler_json(trabalho(pasta, "projeto.json"), {}) or {}
     clientes = config().get("clientes")
     if clientes and d.get("cliente") and os.path.isdir(os.path.join(clientes, d["cliente"])):
         return os.path.join(clientes, d["cliente"], "historico-edicao.json")
-    return os.path.join(os.path.dirname(claude(pasta)), "historico-edicao.json")
+    return os.path.join(os.path.dirname(trabalho(pasta)), "historico-edicao.json")
 
 
 def historico_cliente(pasta):
@@ -1027,7 +1200,17 @@ def cmd_historico(a):
 
 # ---------------- conferência ----------------
 def cmd_conferir(a):
-    pasta = a[0]
+    prob, info = conferir(a[0])
+    print(f"conferência: {len(prob)} problema(s), {len(info)} aviso(s)")
+    for p in prob[:12]:
+        print("  ✗", p)
+    for i in info[:8]:
+        print("  ·", i)
+    if not prob:
+        print("  ok nos itens automáticos. Falta conferir na prévia: rosto livre, texto fluido, sílaba solta.")
+
+
+def conferir(pasta):
     proj = projeto(pasta)
     rot = ler_json(os.path.join(proj, "roteiro.json"))
     if rot is None:
@@ -1137,20 +1320,26 @@ def cmd_conferir(a):
         if atual["trilha"] and h.get("assinatura", {}).get("trilha") == atual["trilha"]:
             prob.append(f"mesma trilha do vídeo \"{h.get('tema', '?')}\"")
 
-    print(f"conferência: {len(prob)} problema(s), {len(info)} aviso(s)")
-    for p in prob[:12]:
-        print("  ✗", p)
-    for i in info[:8]:
-        print("  ·", i)
-    if not prob:
-        print("  ok nos itens automáticos. Falta conferir na folha: rosto livre, texto fluido, sílaba solta.")
+    # zonas proibidas do cliente (design.json: logo, bordado, produto) — texto e peça não podem cair nelas
+    des = ler_json(arquivo_design(pasta), {}) if arquivo_design(pasta) else {}
+    for z in (des or {}).get("zonas", {}).get("proibidas", []):
+        x0, y0, x1, y1 = z
+        for t in textos:
+            y = t.get("y", rot["faixaY"]) if not t.get("centro") else H / 2
+            if y0 <= y <= y1:
+                prob.append(f"texto em {t.get('inicio', '?')}s na zona proibida do cliente ({x0},{y0})-({x1},{y1})")
+        for p in rot.get("pecas") or []:
+            pr = p.get("props", {})
+            if x0 <= pr.get("x", W / 2) <= x1 and y0 <= pr.get("y", rot["faixaY"]) <= y1:
+                prob.append(f"peça {p['nome']} em {p['inicio']}s na zona proibida do cliente")
+    return prob, info
 
 
 CMDS = {
     "onde": cmd_onde, "config": cmd_config, "novo": cmd_novo, "status": cmd_status, "ver": cmd_ver, "set": cmd_set,
     "etapa": cmd_etapa, "pendencia": cmd_pendencia, "resolver": cmd_resolver, "inventario": cmd_inventario,
     "converter": cmd_converter, "folha": cmd_folha, "cor": cmd_cor, "transcrever": cmd_transcrever, "frases": cmd_frases,
-    "voz": cmd_voz, "instalar": cmd_instalar, "projeto": cmd_projeto, "doctor": cmd_doctor, "checar": cmd_checar, "tempos": cmd_tempos, "render": cmd_render, "medir": cmd_medir,
+    "voz": cmd_voz, "instalar": cmd_instalar, "projeto": cmd_projeto, "doctor": cmd_doctor, "checar": cmd_checar, "tempos": cmd_tempos, "mixar": cmd_mixar, "marca": cmd_marca, "render": cmd_render, "medir": cmd_medir,
     "sfx": cmd_sfx, "sfx-indice": cmd_sfx_indice, "conferir": cmd_conferir, "historico": cmd_historico,
     "revisar": cmd_revisar, "alinhar": cmd_alinhar,
 }

@@ -35,7 +35,7 @@ try {
 
 const aviso =
   "Editor Pro: este pedido parece de edição de vídeo (ou trouxe arquivos de vídeo). Carregue a skill `editar` " +
-  "(Skill tool) e siga o fluxo dela: uma etapa por conversa, estado em _CLAUDE/projeto.json. Os complementos só " +
+  "(Skill tool) e siga o fluxo dela: uma etapa por conversa, estado em _EDITOR-PRO/projeto.json. Os complementos só " +
   "entram pelo menu do plano. Se o usuário não quer editar (só perguntou algo sobre vídeo), responda normalmente.";
 
 // Acentos viram \uXXXX para não depender da codificação do terminal.

@@ -57,7 +57,7 @@ Node.js 18+, Python 3.10+, ffmpeg e uma placa de vídeo com DirectX 12 ou Vulkan
 <details>
 <summary><b>Onde ficam os meus clientes e os vídeos?</b></summary>
 
-No seu computador, fora do plugin. Na primeira vez o Editor Pro pergunta a pasta dos clientes. Cada cliente tem um `perfil-edicao.md` com o estilo dele (cores, fontes, ritmo, trilha), e cada vídeo tem uma pasta `_CLAUDE/` com tudo o que o Claude gerou.
+No seu computador, fora do plugin. Na primeira vez o Editor Pro pergunta a pasta dos clientes. Cada cliente tem um `perfil-edicao.md` com o estilo dele (cores, fontes, ritmo, trilha), e cada vídeo tem uma pasta `_EDITOR-PRO/` com tudo o que o Claude gerou.
 </details>
 
 <details>

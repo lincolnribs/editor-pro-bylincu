@@ -5,20 +5,20 @@ Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro
 ## 0. Onde fica cada coisa
 - **Plugin** (`EP` = pasta dois níveis acima desta skill): `scripts/ep.py` (todos os comandos), `template/` (projeto do motor raea), `sfx/` (biblioteca), `skills/editar/` (estas regras, `motion.md`, `complementos.md`, `formatos/`).
 - **Config local** `~/.editor-pro/config.json` (`ep.py config`): `clientes` = pasta com uma subpasta por cliente. Nada de cliente vai para o plugin.
-- **Cliente:** `<clientes>/<Cliente>/` com `perfil-edicao.md` (gosto: cores, fontes, ritmo, trilha, logo), kit (`kit-codigo/`, logo, fontes) e `Finalizados/`. Identidade de um cliente nunca vai para outro.
-- **Vídeo:** `<clientes>/<Cliente>/videos/AAAA-MM-DD_tema/` com `_CLAUDE/` dentro (tudo o que o Claude gera). Brutos ficam onde estão: só se aponta para eles. Sem pasta de clientes: `_CLAUDE/` ao lado dos brutos.
+- **Cliente:** `<clientes>/<Cliente>/` com `design.json` (identidade: cores, fontes, tamanhos, zonas proibidas, logo; o `ep.py projeto` aplica sozinho, zero token; `ep.py marca <pasta>` cria o modelo), `perfil-edicao.md` (gosto: ritmo, trilha, estilo), kit (`kit-codigo/`, logo, fontes) e `Finalizados/`. Identidade de um cliente nunca vai para outro.
+- **Vídeo:** `<clientes>/<Cliente>/videos/AAAA-MM-DD_tema/` com `_EDITOR-PRO/` dentro (tudo o que a IA gera; projetos antigos em `_CLAUDE/` continuam funcionando). Brutos ficam onde estão: só se aponta para eles. Sem pasta de clientes: `_EDITOR-PRO/` ao lado dos brutos.
 - Comando: `python "<EP>/scripts/ep.py" <comando>`. Sem argumentos mostra a ajuda.
 
 ## 1. Conversa e segurança
 - Português, frases curtas. O usuário não é desenvolvedor.
-- Nunca mover, renomear ou apagar brutos nem arquivos do cliente. Apagar = mover para `_CLAUDE/_lixo/`.
-- **Uma só versão:** alterações sobrescrevem a prévia (`_CLAUDE/previa.mp4`) e a entrega (`Finalizados/AAAA-MM-DD_tema.mp4`). Nada de `_v02`.
+- Nunca mover, renomear ou apagar brutos nem arquivos do cliente. Apagar = mover para `_EDITOR-PRO/_lixo/`.
+- **Uma só versão:** alterações sobrescrevem a prévia (`_EDITOR-PRO/previa.mp4`) e a entrega (`Finalizados/AAAA-MM-DD_tema.mp4`). Nada de `_v02`.
 - Instalar programa ou baixar arquivo: dizer o quê e esperar o "sim".
 
 ## 2. Fluxo, estado e memória
 - Etapas: preparar → plano → montar → som → entregar. Uma por conversa; nunca encadear sozinho.
-- Estado em `_CLAUDE/projeto.json`, lido e mudado só pelo `ep.py` (`status`, `ver`, `set`, `etapa`, `pendencia`, `resolver`).
-- **Memória travada: `_CLAUDE/decisoes.md`** (no máximo 25 linhas): o que já foi decidido e não pode ser desfeito (áreas proibidas para texto, estilo aprovado, trilha escolhida, pedidos do usuário que valem até o fim). Toda etapa lê primeiro e nunca desfaz nada listado ali. É isso que permite o `/clear` entre etapas sem perder nada.
+- Estado em `_EDITOR-PRO/projeto.json`, lido e mudado só pelo `ep.py` (`status`, `ver`, `set`, `etapa`, `pendencia`, `resolver`).
+- **Memória travada: `_EDITOR-PRO/decisoes.md`** (no máximo 25 linhas): o que já foi decidido e não pode ser desfeito (áreas proibidas para texto, estilo aprovado, trilha escolhida, pedidos do usuário que valem até o fim). Toda etapa lê primeiro e nunca desfaz nada listado ali. É isso que permite o `/clear` entre etapas sem perder nada.
 - Cada etapa parte da anterior aprovada. Se algo aprovado mudar depois, avisar o que precisa refazer.
 - **Ponto salvo:** revisões aplicadas + arquivo gerado. Aí `ep.py etapa <pasta> <etapa>=concluido`, dizer quantos aprendizados ficaram anotados e sugerir `/clear` + `/editar`. Nunca sugerir `/clear` com pedido não aplicado nem anotado (`ep.py pendencia`).
 
@@ -55,6 +55,6 @@ Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro
 - Trilha escolhida pela emoção da mensagem; mostrar 2–3 opções antes (Pixabay Music e Mixkit, sem direitos autorais). Medida isolada com o mesmo ganho: ≈10 dB abaixo da voz (≈ -24 LUFS), nunca abaixo de -30. Instituição de ensino ou saúde: calma (piano, ambient).
 - Sem voz: master ≈ -14 LUFS.
 
-## 7. Caderno de aprendizados (`_CLAUDE/aprendizados.md`)
+## 7. Caderno de aprendizados (`_EDITOR-PRO/aprendizados.md`)
 - Na revisão, toda correção ou elogio que vale para outros vídeos vira `- [ ] <etapa> · <pedido> · <dd/mm>`. Só deste vídeo não entra; na dúvida, "(talvez só deste vídeo)".
 - Aplicar só quando o usuário pedir (`/editar aprendizados`): gosto do cliente → `perfil-edicao.md`; geral → `~/.editor-pro/regras-locais.md`. Mostrar antes, marcar `[x] → onde entrou`.

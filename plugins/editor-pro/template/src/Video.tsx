@@ -1,7 +1,7 @@
-// Montagem a partir do public/roteiro.json. Normalmente não precisa editar: mude o roteiro.
+// Montagem a partir do roteiro.json (projeto raea). Normalmente não precisa editar: mude o roteiro.
 // Peça sob medida: src/extras.tsx (e guarde no kit do cliente para reaproveitar).
 import React from "react";
-import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame } from "raea";
+import { AbsoluteFill, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame } from "raea";
 import { CSS_FONTES, q, r } from "./dados";
 import { U, clamp, fadeIn, fadeOut } from "./motion";
 import { Texto } from "./componentes/Texto";
@@ -112,15 +112,7 @@ export const Video: React.FC = () => {
           <Fecho fecho={r.fecho} dur={total - q(r.fecho.inicio)} />
         </Sequence>
       ) : null}
-      {(r.sfx ?? []).map((s, k) => (
-        <Sequence key={`s${k}`} from={Math.max(0, q(s.t - (s.pico ?? 0)))}>
-          <Audio src={staticFile(s.arquivo)} volume={s.volume ?? 0.5} />
-        </Sequence>
-      ))}
-      {r.trilha ? (
-        <Audio src={staticFile(r.trilha.arquivo)} loop startFrom={q(r.trilha.desde ?? 0)}
-          volume={(f) => interpolate(f, [0, U * 2, total - U * 4, total], [0, r.trilha!.volume, r.trilha!.volume, 0], clamp)} />
-      ) : null}
+      {/* SFX e trilha não passam pelo motor: o ep.py mixar soma voz + SFX + trilha com FFmpeg (segundos, sem re-renderizar a imagem). */}
     </AbsoluteFill>
   );
 };

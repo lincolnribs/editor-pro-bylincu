@@ -8,19 +8,19 @@ Olha o vídeo inteiro, pensa e decide. Não renderiza nada. Erro aqui custa uma 
 
 Antes: ler `../editar/regras.md`, `../editar/motion.md`, `direcao.md` (nesta pasta) e o guia do modelo em `../editar/formatos/`. Se `preparar` não estiver `concluido` (ou `nao_precisa`), parar.
 
-- **Lê:** `ep.py status <pasta>`, `ep.py ver <pasta> takes`, `_CLAUDE/inventario.txt`, `transcricao/*.txt`, `perfil-edicao.md`, **`ep.py historico <pasta>`** (o que os últimos vídeos do cliente já usaram).
-- **Escreve:** `_CLAUDE/plano.md` (o que o usuário aprova), bloco `plano` no estado (com `plano.direcao`), `_CLAUDE/takes.txt` quando há fala.
+- **Lê:** `ep.py status <pasta>`, `ep.py marca <pasta>` (identidade do cliente em uma linha), `ep.py ver <pasta> takes`, `_EDITOR-PRO/inventario.txt`, `transcricao/*.txt`, `perfil-edicao.md`, **`ep.py historico <pasta>`** (o que os últimos vídeos do cliente já usaram).
+- **Escreve:** `_EDITOR-PRO/plano.md` (o que o usuário aprova), bloco `plano` no estado (com `plano.direcao`), `_EDITOR-PRO/takes.txt` quando há fala.
 - **Próximo:** `/editar` → montar.
 
 ## Regra de ouro: nada é automático
 Não existe estilo padrão. Todo texto, transição e peça tem um **porquê** ligado ao que está sendo dito. Se a escolha caberia em qualquer outro vídeo, ela está genérica: pense de novo. Um vídeo bom tem uma ideia; o resto serve a ela.
 
-## Sem perfil do cliente
-Pergunte em UMA mensagem: cores (ou logo), fontes, ritmo, trilha. Grave `perfil-edicao.md` na pasta do cliente. Peça 1–2 referências de vídeo, sem travar.
+## Sem identidade do cliente
+Sem `design.json`: `ep.py marca <pasta>` cria o modelo; pergunte em UMA mensagem cores (ou logo), fontes e áreas onde não pode ter texto (logo, bordado) e preencha. Sem `perfil-edicao.md`: ritmo e trilha. Peça 1–2 referências de vídeo, sem travar.
 
 ## 1. Entender (antes de qualquer escolha)
 - Leia a transcrição inteira. Escreva para você: **o que o espectador tem que sentir ou entender no fim?** Qual é a frase-chave? Onde está a virada? Há número, lista, contraste, pergunta, emoção?
-- **Decupagem (com fala):** ler e decidir por frase. Take: o último completo costuma ser o melhor; se tropeçou e um anterior está limpo, o anterior. Nunca cortar no meio da frase; nome da marca nunca cortado. Na dúvida, não corta e marca. `takes.txt`: `"<caminho em _CLAUDE/midia>" inicio fim`.
+- **Decupagem (com fala):** ler e decidir por frase. Take: o último completo costuma ser o melhor; se tropeçou e um anterior está limpo, o anterior. Nunca cortar no meio da frase; nome da marca nunca cortado. Na dúvida, não corta e marca. `takes.txt`: `"<caminho em _EDITOR-PRO/midia>" inicio fim`.
 
 ## 2. Direção criativa: 3 caminhos (o usuário escolhe)
 Monte **3 caminhos realmente diferentes** entre si e diferentes dos 2 últimos vídeos do histórico, todos dentro da identidade do cliente. Cada caminho em 4–5 linhas:
