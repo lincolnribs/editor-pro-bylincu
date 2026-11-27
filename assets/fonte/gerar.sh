@@ -7,7 +7,7 @@ CHROME="${CHROME:-/c/Program Files/Google/Chrome/Application/chrome.exe}"
 gerar() { # nome largura altura
   "$CHROME" --headless=new --disable-gpu --hide-scrollbars --default-background-color=00000000 --force-device-scale-factor=2 \
     --virtual-time-budget=4000 --window-size="$2,$3" \
-    --screenshot="$(cygpath -w "$PWD/../$1.png" 2>/dev/null || echo "$PWD/../$1.png")" \
+    --screenshot="$(cygpath -w "$PWD/../readme/$1.png" 2>/dev/null || echo "$PWD/../readme/$1.png")" \
     "file:///$(cygpath -m "$PWD/$1.html" 2>/dev/null || echo "$PWD/$1.html")"
 }
 gerar banner 1280 520

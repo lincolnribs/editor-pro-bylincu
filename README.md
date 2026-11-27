@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/banner.png" alt="Editor Pro by Lincu" width="100%">
+  <img src="assets/readme/banner.png" alt="Editor Pro by Lincu" width="100%">
 </p>
 
 <p align="center">
-  <img src="assets/selos.png" alt="V3.0 · Plugin do Claude Code · Feito com Remotion · Em português · Ferramentas grátis" width="100%">
+  <img src="assets/readme/selos.png" alt="V3.0 · Plugin do Claude Code · Feito com Remotion · Em português · Ferramentas grátis" width="100%">
 </p>
 
 ---
@@ -11,7 +11,7 @@
 ## ⚡ Instale em 1 passo
 
 <p align="center">
-  <img src="assets/instalar.png" alt="1 Copie o link deste repositório. 2 Cole no Claude e escreva instala isso. 3 Reinicie e mande o vídeo: edita esse vídeo." width="100%">
+  <img src="assets/readme/instalar.png" alt="1 Copie o link deste repositório. 2 Cole no Claude e escreva instala isso. 3 Reinicie e mande o vídeo: edita esse vídeo." width="100%">
 </p>
 
 ```
@@ -23,7 +23,7 @@ Não precisa de conta, login nem chave.
 ## 🎬 Como funciona
 
 <p align="center">
-  <img src="assets/etapas.png" alt="1 Organiza: prepara os vídeos brutos. 2 Planeja: monta o roteiro e você aprova. 3 Edita: corta, limpa a voz e anima os textos. 4 Sonoriza: trilha e efeitos no tempo certo. 5 Entrega: revisa e exporta o vídeo pronto." width="100%">
+  <img src="assets/readme/etapas.png" alt="1 Organiza: prepara os vídeos brutos. 2 Planeja: monta o roteiro e você aprova. 3 Edita: corta, limpa a voz e anima os textos. 4 Sonoriza: trilha e efeitos no tempo certo. 5 Entrega: revisa e exporta o vídeo pronto." width="100%">
 </p>
 
 Uma etapa por conversa. Se parar no meio, é só chamar `/editar` que ele continua de onde parou.
@@ -31,13 +31,13 @@ Uma etapa por conversa. Se parar no meio, é só chamar `/editar` que ele contin
 ## ✨ O que deixa o vídeo premium
 
 <p align="center">
-  <img src="assets/premium.png" alt="Voz limpa, texto animado no ritmo da fala, transições profissionais, animações suaves, cor corrigida cena a cena, cards e contadores prontos, efeitos sonoros no tempo certo, feito para Reels, revisão automática, roda no seu computador com ferramentas grátis, gasta pouco do seu plano e começa sozinho quando você manda o vídeo." width="100%">
+  <img src="assets/readme/premium.png" alt="Voz limpa, texto animado no ritmo da fala, transições profissionais, animações suaves, cor corrigida cena a cena, cards e contadores prontos, efeitos sonoros no tempo certo, feito para Reels, revisão automática, roda no seu computador com ferramentas grátis, gasta pouco do seu plano e começa sozinho quando você manda o vídeo." width="100%">
 </p>
 
 ## 🧩 Complementos (opcional)
 
 <p align="center">
-  <img src="assets/complementos.png" alt="motionmaxxing (Apache-2.0), pixel2motion (MIT) e claude-video-effects (MIT)" width="100%">
+  <img src="assets/readme/complementos.png" alt="motionmaxxing (Apache-2.0), pixel2motion (MIT) e claude-video-effects (MIT)" width="100%">
 </p>
 
 Extras do plugin **Editor Pro Motion**. Só entram quando o vídeo pede: [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing), [pixel2motion](https://github.com/nolangz/pixel2motion) e [claude-video-effects](https://github.com/Vibha-Ramprakash/claude-video-effects).
