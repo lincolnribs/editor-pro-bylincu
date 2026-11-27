@@ -28,6 +28,7 @@ Nada chega e para seco. Correntes de passos de U (`corrente()` no template):
 
 ## Texto
 - Uma palavra por camada, no tempo da fala (`tempos` da transcrição). A linha desliza para continuar centrada.
+- Dois eixos: **estilo** (o desenho: linha, karaokê, palavra, hierarquia, marca-texto, caixa, lateral) × **entrada** (a animação). Variar os dois, mais tamanho e lugar.
 - Sem máscara: entrada por blur + opacidade. Revelação por máscara só em imagem, card ou forma.
 - Duas fontes: uma sans neutra + uma condensada de impacto (do kit do cliente). Pesos médio/semibold. Entrelinha quase zero.
 - Letreiro não sai colado na última palavra: segura ~1 s depois dela, se nada vier logo depois.

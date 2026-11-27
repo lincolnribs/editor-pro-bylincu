@@ -31,7 +31,8 @@ Lidas uma vez por sessão por todas as etapas. Depois delas, leia `~/.editor-pro
 
 ## 4. Gosto separado do ofício
 - Ofício (vale para qualquer vídeo) está nas etapas e em `motion.md`. Gosto do cliente está no `perfil-edicao.md`: quando ele diz outra coisa, vale o perfil.
-- Tendência, não regra: nas escolhas criativas, variar entre vídeos (não repetir takes, trilha ou entrada de texto já usados em `Finalizados/`). Regras técnicas (margens, volume, sincronia) são firmes.
+- **Nada automático:** toda escolha criativa tem um porquê ligado à fala. O plano propõe 3 caminhos de direção e o usuário escolhe (`../plano/direcao.md`).
+- **Variar entre vídeos:** `ep.py historico <pasta>` mostra o que os últimos vídeos do cliente usaram (direção, texto, transições, trilha); o próximo muda pelo menos a linguagem do texto e o momento-assinatura. Regras técnicas (margens, volume, sincronia) são firmes.
 
 ## 5. Acabamento (vale para todo vídeo)
 - **Margens do Reels:** sem texto nos 220 px de cima, 450 de baixo e 35 dos lados.

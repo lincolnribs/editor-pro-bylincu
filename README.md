@@ -34,6 +34,8 @@ Uma etapa por conversa. Se parar no meio, é só chamar `/editar` que ele contin
   <img src="assets/readme/premium.png" alt="Voz limpa, texto animado no ritmo da fala, transições profissionais, animações suaves, cor corrigida cena a cena, cards e contadores prontos, efeitos sonoros no tempo certo, feito para Reels, revisão automática, roda no seu computador com ferramentas grátis, gasta pouco do seu plano e começa sozinho quando você manda o vídeo." width="100%">
 </p>
 
+**Nada sai no molde:** antes das cenas, o plano propõe 3 caminhos de direção para o vídeo e você escolhe. O texto combina 7 estilos (linha, karaokê, palavra, hierarquia, marca-texto, caixa, lateral) com 6 entradas, escolhidos pelo sentido de cada frase, e o histórico de cada cliente evita repetir o último vídeo.
+
 ## 🧩 Complementos (opcional)
 
 <p align="center">

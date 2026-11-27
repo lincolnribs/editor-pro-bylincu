@@ -22,7 +22,8 @@ Editor Pro: um comando para tudo o que é conta (tempo, volume, cor, render). Im
   ep.py medir <arquivos> [--ini s --dur s] [--ganho 0.07]
   ep.py sfx [categoria] [--busca termo]       biblioteca de SFX (duração e tempo até o pico)
   ep.py sfx-indice <pasta>                    (manutenção) gera o indice.json de uma pasta de SFX
-  ep.py conferir <pasta>                      checklist automático do roteiro (margens, viúva, buracos, sons...)
+  ep.py conferir <pasta>                      checklist automático do roteiro (margens, viúva, buracos, variação, sons...)
+  ep.py historico <pasta> [--gravar]          o que os últimos vídeos do cliente já usaram (para não repetir)
 """
 import json
 import os
@@ -596,6 +597,53 @@ def cmd_sfx(a):
         print(f"({total} sons) No roteiro: copie para public/sfx/ e use \"pico\" para alinhar o pico no tempo da ação.")
 
 
+# ---------------- histórico do cliente (para variar entre vídeos) ----------------
+def arquivo_historico(pasta):
+    d = ler_json(claude(pasta, "projeto.json"), {}) or {}
+    clientes = config().get("clientes")
+    if clientes and d.get("cliente") and os.path.isdir(os.path.join(clientes, d["cliente"])):
+        return os.path.join(clientes, d["cliente"], "historico-edicao.json")
+    return os.path.join(os.path.dirname(claude(pasta)), "historico-edicao.json")
+
+
+def historico_cliente(pasta):
+    return (ler_json(arquivo_historico(pasta), {}) or {}).get("videos", [])
+
+
+def assinatura(rot):
+    """O 'desenho' de um vídeo: combinações de texto, transições, peças, fecho e trilha."""
+    contar = lambda xs: [f"{k}×{v}" for k, v in sorted({x: xs.count(x) for x in xs}.items(), key=lambda kv: -kv[1])]
+    return {
+        "texto": contar([f"{t.get('estilo', 'linha')}+{t.get('entrada', 'blur')}" for t in rot.get("textos") or []]),
+        "transicoes": contar([t["tipo"] for t in rot.get("transicoes") or []]),
+        "pecas": contar([p["nome"] for p in rot.get("pecas") or []]),
+        "fecho": (rot.get("fecho") or {}).get("tipo"),
+        "trilha": os.path.basename((rot.get("trilha") or {}).get("arquivo", "")) or None,
+    }
+
+
+def cmd_historico(a):
+    pasta = a[0]
+    vids = historico_cliente(pasta)
+    if "--gravar" in a:
+        d = estado(pasta)
+        rot = ler_json(claude(pasta, "remotion", "public", "roteiro.json"), {})
+        reg = {"data": time.strftime("%Y-%m-%d"), "tema": d.get("tema"), "modelo": d.get("modelo"),
+               "direcao": (d.get("plano") or {}).get("direcao"), "assinatura": assinatura(rot)}
+        vids = [v for v in vids if v.get("tema") != reg["tema"]] + [reg]
+        gravar_json(arquivo_historico(pasta), {"videos": vids})
+        print(f"ok: registrado em {arquivo_historico(pasta)} ({len(vids)} vídeos)")
+        return
+    if not vids:
+        print("sem histórico deste cliente ainda (primeiro vídeo: liberdade total)")
+        return
+    for v in vids[-5:]:
+        s = v.get("assinatura", {})
+        print(f"{v.get('data')} · {v.get('tema')} · direção: {v.get('direcao') or '?'}")
+        print(f"   texto {', '.join(s.get('texto', [])) or '-'} | transições {', '.join(s.get('transicoes', [])) or '-'} | "
+              f"peças {', '.join(s.get('pecas', [])) or '-'} | fecho {s.get('fecho') or '-'} | trilha {s.get('trilha') or '-'}")
+
+
 # ---------------- conferência ----------------
 def cmd_conferir(a):
     pasta = a[0]
@@ -638,7 +686,7 @@ def cmd_conferir(a):
     for t in textos:
         linhas = [l.split() for l in t["texto"].split("|")]
         n = sum(len(l) for l in linhas)
-        if n > 1 and any(len(l) == 1 for l in linhas):
+        if n > 1 and any(len(l) == 1 for l in linhas) and t.get("estilo") not in ("palavra", "hierarquia"):
             prob.append(f"viúva em {t['inicio']}s: \"{t['texto']}\" (uma palavra sozinha na linha)")
         if len(linhas) == 1 and n > 4 and t.get("tipo") != "legenda":
             info.append(f"texto longo numa linha só em {t['inicio']}s (quebre com \" | \")")
@@ -688,6 +736,26 @@ def cmd_conferir(a):
     for x, y in zip(trs, trs[1:]):
         if x["tipo"] == y["tipo"] and x["tipo"] != "corte":
             info.append(f"transição {x['tipo']} repetida em sequência ({x['t']}s e {y['t']}s)")
+    # variação: nada de molde repetido
+    if len(textos) >= 3:
+        combos = [(t.get("estilo", "linha"), t.get("entrada", "blur")) for t in textos]
+        mais, n = max(((c, combos.count(c)) for c in set(combos)), key=lambda x: x[1])
+        if n / len(combos) > 0.6:
+            prob.append(f"texto sempre igual: {n} de {len(combos)} em {mais[0]}+{mais[1]} (varie estilo, entrada, tamanho ou lugar pelo sentido da frase)")
+        for x, y in zip(textos, textos[1:]):
+            if (x.get("estilo", "linha"), x.get("entrada", "blur"), x.get("y"), x.get("centro")) == (y.get("estilo", "linha"), y.get("entrada", "blur"), y.get("y"), y.get("centro")):
+                info.append(f"textos seguidos idênticos no desenho ({x['inicio']}s e {y['inicio']}s)")
+                break
+    if len(trs) >= 3 and len({t["tipo"] for t in trs}) == 1:
+        prob.append(f"todas as transições são {trs[0]['tipo']}")
+    anteriores = historico_cliente(pasta)[-2:]
+    atual = assinatura(rot)
+    for h in anteriores:
+        if h.get("assinatura", {}).get("texto") == atual["texto"] and atual["texto"]:
+            info.append(f"mesma linguagem de texto do vídeo \"{h.get('tema', '?')}\" ({', '.join(atual['texto'])})")
+        if atual["trilha"] and h.get("assinatura", {}).get("trilha") == atual["trilha"]:
+            prob.append(f"mesma trilha do vídeo \"{h.get('tema', '?')}\"")
+
     print(f"conferência: {len(prob)} problema(s), {len(info)} aviso(s)")
     for p in prob[:12]:
         print("  ✗", p)
@@ -702,7 +770,7 @@ CMDS = {
     "etapa": cmd_etapa, "pendencia": cmd_pendencia, "resolver": cmd_resolver, "inventario": cmd_inventario,
     "converter": cmd_converter, "folha": cmd_folha, "cor": cmd_cor, "transcrever": cmd_transcrever, "frases": cmd_frases,
     "voz": cmd_voz, "instalar": cmd_instalar, "remotion": cmd_remotion, "render": cmd_render, "medir": cmd_medir,
-    "sfx": cmd_sfx, "sfx-indice": cmd_sfx_indice, "conferir": cmd_conferir,
+    "sfx": cmd_sfx, "sfx-indice": cmd_sfx_indice, "conferir": cmd_conferir, "historico": cmd_historico,
 }
 
 if __name__ == "__main__":

@@ -16,17 +16,28 @@ export type Tema = {
   destaque: string; // cor das palavras de destaque
   fundo?: string; // cor sólida de cards e cartelas
   corSobreFundo?: string; // texto sobre `fundo`
+  corSobreDestaque?: string; // texto sobre a cor de destaque (marca-texto, pílula)
   tamanho: number; // px do lettering
   tamanhoLegenda: number;
   sombra?: boolean; // sombra suave no bloco (só quando o fundo é vídeo e o texto não lê)
 };
 
+// Estilo = o desenho do texto na tela (a entrada é a animação). Combinar os dois dá a variação.
+// linha: linhas centradas que recentralizam · karaoke: frase apagada, cada palavra acende ao ser dita
+// palavra: um bloco por vez (cada " | " troca o anterior), grande · hierarquia: destaque gigante na condensada, resto pequeno
+// marca-texto: barra de cor cresce atrás do destaque · caixa: bloco num fundo sólido que cresce com o texto
+// lateral: coluna alinhada à esquerda ou à direita (rosto do outro lado)
+export type EstiloTexto = "linha" | "karaoke" | "palavra" | "hierarquia" | "marca-texto" | "caixa" | "lateral";
+
 export type Texto = {
   inicio: number;
   fim: number;
-  texto: string; // quebra de linha com " | " (sem viúva: nenhuma linha com uma palavra só)
+  texto: string; // quebra de linha com " | " (sem viúva: nenhuma linha com uma palavra só, exceto em palavra/hierarquia)
   tempos?: number[]; // segundo de cada palavra (da transcrição). Sem isso: cascata de U/2
-  entrada?: EntradaTexto; // padrão: blur
+  estilo?: EstiloTexto; // escolhido no plano, com motivo (não existe padrão "certo")
+  entrada?: EntradaTexto;
+  lado?: "esquerda" | "direita"; // estilo lateral
+  caixaAlta?: boolean;
   tipo?: "lettering" | "legenda" | "impacto"; // impacto = fonte condensada, maior
   destaque?: string[];
   y?: number; // px do topo; padrão: faixaY

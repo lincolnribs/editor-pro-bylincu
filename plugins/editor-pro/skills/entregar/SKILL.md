@@ -19,4 +19,4 @@ Antes: ler `../editar/regras.md` (§5 e §6) e o checklist de `../editar/motion.
 5. **Entregar:** copie para `Finalizados/` do cliente (sem pasta de clientes: `Finalizados/` ao lado dos brutos) com o nome `AAAA-MM-DD_tema.mp4`, sobrescrevendo se já existir. Avise o caminho.
 
 ## Fechamento
-`ep.py etapa <pasta> entregar=concluido`, diga quantos aprendizados ficaram anotados e sugira `/editar aprendizados` se houver.
+`ep.py historico <pasta> --gravar` (registra a direção e o desenho deste vídeo, para o próximo variar). `ep.py etapa <pasta> entregar=concluido`, diga quantos aprendizados ficaram anotados e sugira `/editar aprendizados` se houver.
